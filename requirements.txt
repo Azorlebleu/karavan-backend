@@ -10,3 +10,4 @@ databases
 alembic
 python-dotenv
 logging
+gunicorn

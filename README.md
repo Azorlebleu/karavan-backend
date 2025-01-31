@@ -5,7 +5,12 @@
 cd /KaraVan/karavan-backend
 source /venv/bin/activate
 
+# Development mode
 uvicorn app.main:app --reload
+
+# Production mode (with SSL)
+uvicorn app.main:app --host 0.0.0.0 --port 8000
+
 ```
 
 ## Infrasctructure
