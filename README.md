@@ -32,11 +32,7 @@ sudo apt install python3-dev
 sudo apt install libpq-dev 
 
 
-pip install requests websockets
-pip install fastapi uvicorn
-pip install aioredis psycopg2 asyncpg
-pip install sqlalchemy databases alembic
-pip install python-dotenv
+pip3 install -r requirements.txt
 ```
 
 ## Run the app
