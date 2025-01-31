@@ -36,6 +36,6 @@ async def websocket_endpoint_test(websocket: WebSocket):
 
 
     except WebSocketDisconnect:
-        active_rooms[room_id].remove(websocket)
+        print("Test WebSocket disconnected.")
 
         

@@ -8,14 +8,6 @@ source venv/bin/activate  # On macOS/Linux
 venv\Scripts\activate     # On Windows
 ```
 
-## Install dependencies
-```
-pip install requests websockets
-pip install fastapi uvicorn
-pip install aioredis psycopg2 asyncpg
-pip install sqlalchemy databases alembic
-pip install python-dotenv
-```
 
 ## Install PostgreSQL
 sudo apt install postgresql postgresql-contrib  # Ubuntu/Debian
@@ -30,6 +22,21 @@ ALTER ROLE karaoke_user SET default_transaction_isolation TO 'read committed';
 ALTER ROLE karaoke_user SET timezone TO 'UTC';
 GRANT ALL PRIVILEGES ON DATABASE karaoke_db TO karaoke_user;
 \q
+```
+
+
+## Install dependencies
+```
+# Necessary for psycopg2 on Debian/Ubuntu
+sudo apt install python3-dev
+sudo apt install libpq-dev 
+
+
+pip install requests websockets
+pip install fastapi uvicorn
+pip install aioredis psycopg2 asyncpg
+pip install sqlalchemy databases alembic
+pip install python-dotenv
 ```
 
 ## Run the app
