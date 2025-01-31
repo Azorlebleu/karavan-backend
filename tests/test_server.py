@@ -61,6 +61,8 @@ async def test_room_player():
         # Variables
         room_id = "123"
         player = "pedro"
+        test_pass = True
+
         # Establish WebSocket connection to the server
         url = f"{WEBSOCKET_URL}/{room_id}/{player}"
         print(url)
@@ -78,13 +80,16 @@ async def test_room_player():
                 print(f"Received from WebSocket: {response}")
 
                 # Test if the server responded appropriately
-                if "pong" in response:
-                    print("WebSocket test passed.")
+                if player in response:
+                    pass
                 else:
                     print(f"Unexpected WebSocket response: {response}")
+                    test_pass = False
                 
                 # Wait for 1 second before sending the next ping
                 await asyncio.sleep(1)
+        if test_pass:
+            print("WebSocket test passed.")
 
     except Exception as e:
         print(f"Error occurred while testing WebSocket: {e}")

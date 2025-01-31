@@ -8,14 +8,16 @@ active_rooms: Dict[str, List[WebSocket]] = {}
 async def websocket_endpoint(websocket: WebSocket, room_id: str, player: str):
 
     await websocket.accept()
-    print("jaja 🤬😎")
+
     if room_id not in active_rooms:
+        logger.info(f"Room {room_id} not found. Creating new room.")
         active_rooms[room_id] = []
-    print(f"{active_rooms=}")
+
     active_rooms[room_id].append(websocket)
+
     await add_player(room_id, player)
 
-    print("jaja 💚😎")
+
     try:
         while True:
             data = await websocket.receive_text()
@@ -34,7 +36,7 @@ async def websocket_endpoint_test(websocket: WebSocket):
     try:
         while True:
             data = await websocket.receive_text()
-            print(data)
+            logger.info(f"Received data from WebSocket: {data}")
             await websocket.send_text(f"{data} and pong back!")
 
 
