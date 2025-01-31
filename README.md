@@ -24,13 +24,12 @@ karaoke-backend/
 
 
 ## Set up
-Creating a Virtual environment
+### Creating a Virtual environment
 ```
 python -m venv venv
 source venv/bin/activate  # On macOS/Linux
 venv\Scripts\activate     # On Windows
 ```
-
 
 ### Install PostgreSQL
 sudo apt install postgresql postgresql-contrib  # Ubuntu/Debian
@@ -53,7 +52,8 @@ GRANT ALL PRIVILEGES ON DATABASE karaoke_db TO karaoke_user;
 # Necessary for psycopg2 on Debian/Ubuntu
 sudo apt install python3-dev
 sudo apt install libpq-dev 
-
+sudo apt install redis-server
+sudo systemctl start redis
 
 pip3 install -r requirements.txt
 ```

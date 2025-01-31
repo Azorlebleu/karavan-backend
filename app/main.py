@@ -2,6 +2,7 @@ from fastapi import FastAPI, WebSocket
 from .database import database
 from .game_manager import init_redis
 from .websocket import websocket_endpoint, websocket_endpoint_test
+from .logger import logger
 
 app = FastAPI()
 

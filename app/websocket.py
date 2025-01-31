@@ -1,18 +1,21 @@
 from fastapi import WebSocket, WebSocketDisconnect
 from .game_manager import add_player
 from typing import Dict, List
+from .logger import logger
 
 active_rooms: Dict[str, List[WebSocket]] = {}
 
 async def websocket_endpoint(websocket: WebSocket, room_id: str, player: str):
-    await websocket.accept()
 
+    await websocket.accept()
+    print("jaja 🤬😎")
     if room_id not in active_rooms:
         active_rooms[room_id] = []
+    print(f"{active_rooms=}")
     active_rooms[room_id].append(websocket)
-
     await add_player(room_id, player)
 
+    print("jaja 💚😎")
     try:
         while True:
             data = await websocket.receive_text()
@@ -26,7 +29,7 @@ async def websocket_endpoint(websocket: WebSocket, room_id: str, player: str):
 async def websocket_endpoint_test(websocket: WebSocket):
     await websocket.accept()
 
-    print("Received a test 😎😎")
+    logger.info("Test WebSocket connected.")
 
     try:
         while True:
@@ -36,6 +39,4 @@ async def websocket_endpoint_test(websocket: WebSocket):
 
 
     except WebSocketDisconnect:
-        print("Test WebSocket disconnected.")
-
-        
+        logger.info("Test WebSocket disconnected.")

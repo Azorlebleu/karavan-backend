@@ -9,3 +9,4 @@ sqlalchemy
 databases
 alembic
 python-dotenv
+logging
