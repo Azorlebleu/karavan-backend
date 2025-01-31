@@ -15,4 +15,4 @@ venv/
 .idea/
 
 # Ignore log files
-logs/
+logs/*
