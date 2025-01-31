@@ -1,1 +1,11 @@
-requests websockets fastapi uvicorn aioredis psycopg2 asyncpg sqlalchemy databases alembic python-dotenv
+requests
+websockets
+fastapi
+uvicorn
+aioredis
+psycopg2
+asyncpg
+sqlalchemy
+databases
+alembic
+python-dotenv
