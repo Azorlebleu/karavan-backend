@@ -13,3 +13,6 @@ venv/
 # Ignore other IDE-specific files
 .vscode/
 .idea/
+
+# Ignore log files
+logs/
