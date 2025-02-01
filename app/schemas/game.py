@@ -1,10 +1,11 @@
 from pydantic import BaseModel, Field
 from typing import Optional, List
-
+from .chat import Chat
 
 class Room(BaseModel):
     room_id: str
     players: List[str] = Field(default=[])
+    host: str
 
 class RoomResponse(BaseModel):
     room: Room

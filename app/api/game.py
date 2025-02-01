@@ -1,17 +1,17 @@
 from fastapi import APIRouter, HTTPException
 from app.services.game import get_room, create_room, join_room
-from app.schemas.game import RoomResponse, ErrorResponse, JoinRoomRequest
+from app.schemas.game import Room, ErrorResponse, JoinRoomRequest
 from ..logger import logger
 router = APIRouter()
 
-@router.get("/room/{room_id}", response_model=RoomResponse)
+@router.get("/room/{room_id}", response_model=Room)
 async def get_room_endpoint(room_id: str):
     """Get a game room by room ID"""
 
     room = await get_room(room_id) 
-    return RoomResponse(room=room) 
+    return room
 
-@router.put("/room/{player_name}", response_model=RoomResponse)
+@router.put("/room/{player_name}", response_model=Room)
 async def create_room_endpoint(player_name: str):
     """Create a new game room"""
     room_id = await create_room(player_name)
@@ -22,14 +22,14 @@ async def create_room_endpoint(player_name: str):
         raise HTTPException(status_code=400, detail="Failed to create room.")
 
     # Return the room directly as the response model expects a `Room` object
-    return RoomResponse(room=room)
+    return room
 
 
-@router.post("/room/", response_model=RoomResponse)
+@router.post("/room/", response_model=Room)
 async def join_room_endpoint(request: JoinRoomRequest):
     """Join an existing room"""
 
     room = await join_room(request.player_name, request.room_id)
     if "error" in room:
         raise HTTPException(status_code=400, detail=room["reason"])
-    return RoomResponse(room=room)
+    return room

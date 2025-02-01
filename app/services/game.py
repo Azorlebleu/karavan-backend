@@ -1,6 +1,6 @@
 from fastapi import WebSocket, WebSocketDisconnect, HTTPException
-from ..repository.game_manager import create_room, get_room, add_player
-from ..schemas.game import *
+from ..repository.game import create_room, get_room, add_player
+from ..schemas.game import Room
 from typing import Dict, List
 from ..logger import logger
 from ..settings import MAX_PLAYERS
@@ -14,26 +14,26 @@ async def get_new_room(player_name: str):
 async def join_room(player_name: str, room_id: str):
     logger.info(f"Received request to join room {room_id} from player {player_name}")
     room: Room = await get_room(room_id)
-    
+    logger.debug(f"Room state before adding player {player_name}: {room}")
+
+    # Conditions for joining the room
     if room is None:
-        logger.info(f"Room {room_id} does not exist.")
-        raise HTTPException(status_code=404, detail="Room does not exist")
-
-    logger.debug(f"Room state: {room}")
-    if player_name in room.get("players"):
-        logger.info(f"Player {player_name} is already in room {room_id}")
-        raise HTTPException (status_code=400, detail="Player already exists in room")
-    
-    if len(room.get("players")) >= MAX_PLAYERS:
-        logger.info(f"Room {room_id} is full. Cannot join.")
-        raise HTTPException (status_code=400, detail="Room is full")
-    
-    player_added = await add_player(player_name, room_id)
-
-    if player_added:
-        logger.info(f"Player {player_name} joined room {room_id}")
-        return await get_room(room_id)
-    else:
-        error_message = f"Failed to add player {player_name} to room {room_id}"
+        error_message = f"Room {room_id} does not exist."
         logger.info(error_message)
-        return HTTPException (status_code=400, detail=error_message)
+        raise HTTPException(status_code=404, detail=error_message)
+
+    if player_name in room.players:
+        error_message = f"Player {player_name} is already in room {room_id}"
+        logger.info(error_message)
+        raise HTTPException (status_code=400, detail=error_message)
+    
+    if len(room.players) >= MAX_PLAYERS:
+        error_message=f"Room {room_id} is full. Cannot join."
+        logger.info(error_message)
+        raise HTTPException (status_code=400, detail=error_message)
+    
+    await add_player(player_name, room_id)
+
+
+    logger.info(f"Player {player_name} joined room {room_id} successfully")
+    return await get_room(room_id)
