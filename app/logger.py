@@ -30,4 +30,4 @@ logger.addHandler(console_handler)
 # logger.error("This is an error message.")
 # logger.critical("This is a critical message.")
 
-logger.info("Server restarted.")
+logger.warning("Server restarted.")

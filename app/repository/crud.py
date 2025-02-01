@@ -1,5 +1,5 @@
-from .database import database
-from .models import games, players
+from ..models.database import database
+from ..models.game import games, players
 
 async def create_room(room_id: str, host: str):
     query = games.insert().values(room_id=room_id, host=host)

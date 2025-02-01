@@ -1,5 +1,5 @@
 from sqlalchemy import Table, Column, Integer, String, ForeignKey
-from .database import metadata
+from database import metadata
 
 games = Table(
     "games",

@@ -1,8 +1,10 @@
-from fastapi import FastAPI, WebSocket
-from .database import database
-from .game_manager import init_redis
-from .websocket import websocket_endpoint, websocket_endpoint_test
-from .logger import logger
+from fastapi import FastAPI
+from app.models.database import database
+from app.repository.game_manager import init_redis
+from app.api.websocket import router as websocket_router
+from app.api.game import router as game_router
+
+from app.logger import logger
 
 app = FastAPI()
 
@@ -15,14 +17,9 @@ async def startup():
 async def shutdown():
     await database.disconnect()
 
-@app.websocket("/ws/{room_id}/{player}")
-async def websocket_route(websocket: WebSocket, room_id: str, player: str):
-    await websocket_endpoint(websocket, room_id, player)
-
-
-@app.websocket("/ws/test")
-async def websocket_route(websocket: WebSocket):
-    await websocket_endpoint_test(websocket)
+# Include API routers
+app.include_router(websocket_router)
+app.include_router(game_router)
 
 @app.get("/")
 def read_root():

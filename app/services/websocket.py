@@ -1,7 +1,7 @@
 from fastapi import WebSocket, WebSocketDisconnect
-from .game_manager import add_player
+from ..repository.game_manager import add_player
 from typing import Dict, List
-from .logger import logger
+from ..logger import logger
 
 active_rooms: Dict[str, List[WebSocket]] = {}
 
