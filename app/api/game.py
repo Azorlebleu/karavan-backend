@@ -29,7 +29,7 @@ async def create_room_endpoint(player_name: str):
 async def join_room_endpoint(request: JoinRoomRequest):
     """Join an existing room"""
 
-    room = await join_room(request.player_name, request.room_id)
+    room = await join_room(request)
     if "error" in room:
         raise HTTPException(status_code=400, detail=room["reason"])
     return room

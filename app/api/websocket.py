@@ -11,7 +11,3 @@ async def websocket_route(websocket: WebSocket, room_id: str, player: str):
 async def websocket_test_route(websocket: WebSocket):
     await websocket_endpoint_test(websocket)
 
-@router.post("/test/websocket-trigger")
-async def trigger_message_endpoint(request: dict):
-    """Get a game room by room ID"""
-    await broadcast_event(request.get("room_id"), request.get("message"))

@@ -57,7 +57,7 @@ async def handle_send_message(request: NewMessageRequest):
         logger.debug(f"Message from {request.message.sender} in room {request.room_id} has been stored in Redis")
 
     # Send the message to all connected clients in the room
-    message_brodcast_websocket = await broadcast_event(request)
+    message_brodcast_websocket = await broadcast_event(request.room_id, request.message)
     if message_brodcast_websocket:
         logger.debug(f"Message from {request.message.sender} in room {request.room_id} has been broadcasted to all clients")
 
