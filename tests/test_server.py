@@ -11,6 +11,7 @@ SERVER_URL = "http://127.0.0.1:8000"
 WEBSOCKET_URL = "ws://127.0.0.1:8000/ws"
 
 
+
 # Function to test the HTTP server
 async def test_http():
     try:

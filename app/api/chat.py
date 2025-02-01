@@ -1,8 +1,8 @@
-from fastapi import APIRouter
-from app.services.chat import get_ordered_chat
+from fastapi import APIRouter, HTTPException
+from app.services.chat import get_ordered_chat, handle_send_message
 from app.schemas.chat import Chat, NewMessageRequest
 from app.schemas.common import SuccessMessage
-from app.repository.chat import send_message
+from app.repository.chat import add_message
 from ..logger import logger
 router = APIRouter()
 
@@ -20,11 +20,9 @@ async def get_chat_endpoint(room_id: str):
 @router.post("/chat/", response_model=SuccessMessage)
 async def send_message_endpoint(request: NewMessageRequest):
 
-    logger.info(f"Sending a chat to {request.room_id} from {request.player} with content: {request.content}")
+    message_sent = await handle_send_message(request)  
     
-    message_sent = await send_message(request.room_id, request.player, request.content)  
-    
-    if message_sent:
-        logger.debug(f"Message was sent successfully for room {request.room_id}: {request.content}")
+    if not message_sent:
+        raise HTTPException(status_code=400, detail="Failed to send message")
 
-    return {"success": "Message sent successfully!"}
+    return SuccessMessage(success="Message sent successfully!")

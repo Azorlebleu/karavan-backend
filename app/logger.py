@@ -7,7 +7,7 @@ logger = logging.getLogger('my_app')
 logger.setLevel(logging.DEBUG)
 
 # Create file handler which logs messages to a file
-file_handler = logging.FileHandler('./logs/server.log')
+file_handler = logging.FileHandler('./logs/server.log', encoding='utf-8')
 file_handler.setLevel(logging.DEBUG)  # Log only ERROR and above to the file
 
 # Create console handler for displaying logs to the console
