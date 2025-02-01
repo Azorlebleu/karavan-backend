@@ -1,20 +1,35 @@
-from fastapi import APIRouter
-from ..repository.game_manager import create_room, get_room
-from ..services.game import join_room
-from ..schemas.game import *
+from fastapi import APIRouter, HTTPException
+from app.services.game import get_room, create_room, join_room
+from app.schemas.game import RoomResponse, ErrorResponse, JoinRoomRequest
+from ..logger import logger
 router = APIRouter()
 
-@router.get("/test")
-def do_test():
-    return {"message": "/test endpoint working!"}
+@router.get("/room/{room_id}", response_model=RoomResponse)
+async def get_room_endpoint(room_id: str):
+    """Get a game room by room ID"""
 
+    room = await get_room(room_id) 
+    return RoomResponse(room=room) 
 
-@router.get("/new-room/{player_name}")
+@router.put("/room/{player_name}", response_model=RoomResponse)
 async def create_room_endpoint(player_name: str):
+    """Create a new game room"""
     room_id = await create_room(player_name)
-    return({"room_id": room_id} if room_id else {"error": "Failed to create room."} )
+    room = await get_room(room_id)
 
-@router.post("/game/")
-async def join_game_endpoint(request: JoinRoomRequest):
+    if not room:
+        logger.error(f"Failed to create room for {player_name}")
+        raise HTTPException(status_code=400, detail="Failed to create room.")
+
+    # Return the room directly as the response model expects a `Room` object
+    return RoomResponse(room=room)
+
+
+@router.post("/room/", response_model=RoomResponse)
+async def join_room_endpoint(request: JoinRoomRequest):
+    """Join an existing room"""
+
     room = await join_room(request.player_name, request.room_id)
-    return(room if room else {"error": f"Failed to find room {game_id}"} )
+    if "error" in room:
+        raise HTTPException(status_code=400, detail=room["reason"])
+    return RoomResponse(room=room)

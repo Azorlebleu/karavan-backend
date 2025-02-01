@@ -1,11 +1,17 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
+from typing import Optional, List
 
-class CreateRoomRequest(BaseModel):
-    player_name: str
 
 class Room(BaseModel):
     room_id: str
-    players: list[str]
+    players: List[str] = Field(default=[])
+
+class RoomResponse(BaseModel):
+    room: Room
+
+class ErrorResponse(BaseModel):
+    error: str
+    reason: Optional[str] = None
 
 class JoinRoomRequest(BaseModel):
     player_name: str

@@ -1,4 +1,4 @@
-from fastapi import WebSocket, WebSocketDisconnect
+from fastapi import WebSocket, WebSocketDisconnect, HTTPException
 from ..repository.game_manager import create_room, get_room, add_player
 from ..schemas.game import *
 from typing import Dict, List
@@ -17,20 +17,23 @@ async def join_room(player_name: str, room_id: str):
     
     if room is None:
         logger.info(f"Room {room_id} does not exist.")
-        return None
+        raise HTTPException(status_code=404, detail="Room does not exist")
 
-    if player_name in room.players:
+    logger.debug(f"Room state: {room}")
+    if player_name in room.get("players"):
         logger.info(f"Player {player_name} is already in room {room_id}")
-        return None
+        raise HTTPException (status_code=400, detail="Player already exists in room")
     
-    if len(room.players) >= MAX_PLAYERS:
+    if len(room.get("players")) >= MAX_PLAYERS:
         logger.info(f"Room {room_id} is full. Cannot join.")
-        return None
+        raise HTTPException (status_code=400, detail="Room is full")
     
-    added_player = await add_player(player_name, room_id)
-    if added_player:
+    player_added = await add_player(player_name, room_id)
+
+    if player_added:
         logger.info(f"Player {player_name} joined room {room_id}")
-        return room_id
+        return await get_room(room_id)
     else:
-        logger.info(f"Failed to add player {player_name} to room {room_id}")
-        return None
+        error_message = f"Failed to add player {player_name} to room {room_id}"
+        logger.info(error_message)
+        return HTTPException (status_code=400, detail=error_message)
