@@ -4,7 +4,7 @@ from app.models.database import database
 from app.repository.game import init_redis as redis_game_init
 from app.repository.chat import init_redis as redis_chat_init
 
-
+from fastapi.middleware.cors import CORSMiddleware
 from app.api.websocket import router as websocket_router
 from app.api.game import router as game_router
 from app.api.chat import router as chat_router
@@ -17,6 +17,15 @@ from app.logger import logger
 REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6379")  # Default to localhost if not set
 
 app = FastAPI()
+
+# Handle CORS
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Allow all origins
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # Create a Redis client
 async def get_redis():
