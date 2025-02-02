@@ -5,7 +5,7 @@ import json
 from ..logger import logger
 import uuid
 from fastapi import HTTPException, FastAPI
-from ..schemas.game import Room
+from ..schemas.game import Room, CreateNewRoomRequest
 from ..schemas.chat import Chat
 import aioredis
 
@@ -19,14 +19,15 @@ async def init_redis():
     redis = aioredis.from_url(REDIS_URL, encoding="utf-8", decode_responses=True)
 
 
-async def create_room(player_name: str):
+async def create_room(request: CreateNewRoomRequest):
+    
     room_id = str(uuid.uuid4())  # Generate a unique room ID
-    room = Room(room_id=room_id, players=[player_name], host=player_name).model_dump_json()
+    room = Room(room_id=room_id, players=[request.host], host=request.host).model_dump_json()
     chat = Chat(room_id=room_id, messages=[]).model_dump_json()
     
     await redis.set(f"{room_id}:room", room)
     await redis.set(f"{room_id}:chat", chat)
-    logger.info(f"Creating room {room_id} with player {player_name}")
+    logger.info(f"Creating room {room_id} with player {request.host}")
     return(room_id)
 
 async def get_room(room_id: str):

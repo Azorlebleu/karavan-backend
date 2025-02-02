@@ -17,3 +17,6 @@ class ErrorResponse(BaseModel):
 class JoinRoomRequest(BaseModel):
     player_name: str
     room_id: str
+
+class CreateNewRoomRequest(BaseModel):
+    host: str

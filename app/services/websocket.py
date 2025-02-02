@@ -52,7 +52,7 @@ async def broadcast_event(room_id: str, request):
     logger.debug(f"Triggering request {request} in room {room_id}")
 
     if room_id not in active_rooms:
-        error_message = f"Room {room_id} does not exist."
+        error_message = f"No active websocket for room {room_id} found"
         logger.error(error_message)
         raise HTTPException(status_code=404, detail=error_message)
     
