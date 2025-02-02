@@ -13,16 +13,13 @@ async def get_chat_endpoint(room_id: str):
     
     chat = await get_ordered_chat(room_id) 
     
-    logger.debug(f"Chat retrieved successfully for room {room_id}: {chat}")
 
     return chat
 
 @router.post("/chat", response_model=SuccessMessage)
 async def send_message_endpoint(request: NewMessageRequest):
 
-    message_sent = await handle_send_message(request)  
-    
-    if not message_sent:
-        raise HTTPException(status_code=400, detail="Failed to send message")
+    logger.debug(f"Sending message to room {request.room_id} from {request.message.sender} with content: {request.message.content}")
+    await handle_send_message(request)  
 
     return SuccessMessage(success="Message sent successfully!")

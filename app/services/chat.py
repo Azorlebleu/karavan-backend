@@ -43,7 +43,7 @@ async def handle_send_message(request: NewMessageRequest):
         logger.error(error_message)
         raise HTTPException(status_code=404, detail=error_message)
 
-    if request.message.sender not in room.players:
+    if request.message.sender not in [player.name for player in room.players]:
         error_message = f"Player {request.message.sender} is not in room {request.room_id}"
         logger.error(error_message)
         raise HTTPException(status_code=403, detail=error_message)

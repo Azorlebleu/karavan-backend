@@ -1,13 +1,17 @@
 from fastapi import WebSocket, WebSocketDisconnect
 from ..repository.game import add_player
 from ..schemas.chat import Message, NewMessageRequest
-from typing import Dict, List
+from typing import Dict, List, TypeVar, Generic
 from ..logger import logger
 from fastapi import HTTPException
 import json
+from pydantic import BaseModel
 
 # Dictionnary to store active rooms and their connections. Each room is associated with a list of WebSocket connections.
 active_rooms: Dict[str, List[WebSocket]] = {"b594d6ed-39d5-422e-8cca-1c14e9eca09a": []}
+
+# Define a generic type for Pydantic models
+T = TypeVar("T", bound=BaseModel)
 
 async def websocket_endpoint_test(websocket: WebSocket):
     """Test WebSocket endpoint. Used with tests in tests/test_server.py."""
@@ -47,19 +51,24 @@ async def game_websocket(websocket: WebSocket, room_id: str, player: str):
     except WebSocketDisconnect:
         active_rooms[room_id].remove(websocket)
 
-async def broadcast_event(room_id: str, request):
+async def broadcast_event(room_id: str, request: T) -> bool:
 
-    logger.debug(f"Triggering request {request} in room {room_id}")
+    logger.debug(f"Broadcasting {request} in room {room_id}")
+    try:
 
-    if room_id not in active_rooms:
-        error_message = f"No active websocket for room {room_id} found"
-        logger.error(error_message)
-        raise HTTPException(status_code=404, detail=error_message)
-    
-    logger.debug(f"{len(active_rooms[room_id])} players in room {room_id}")
+        if room_id not in active_rooms:
+            error_message = f"No active websocket for room {room_id} found"
+            logger.error(error_message)
+            raise HTTPException(status_code=404, detail=error_message)
+        
+        logger.debug(f"{len(active_rooms[room_id])} players in room {room_id}")
 
-    for connection in active_rooms[room_id]:
-        await connection.send_text(request.model_dump_json())
+        for connection in active_rooms[room_id]:
+            await connection.send_text(request.model_dump_json())
 
-    logger.debug(f"Message broadcasted successfully in room {room_id}")
-    return(True)
+        logger.debug(f"Message broadcasted successfully in room {room_id}")
+        return(True)
+
+    except Exception as e:
+        logger.warning(f"Error while broadcasting {request} in room {room_id}: {e}")
+        return(False)
