@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException
-from app.services.game import get_room, create_room, join_room, handle_player_ready
-from app.schemas.game import Room, ErrorResponse, JoinRoomRequest, CreateNewRoomRequest, PlayerReadyRequest
+from app.services.game import get_room_safe, create_room, join_room, handle_player_ready
+from app.schemas.game import Room, ErrorResponse, JoinRoomRequest, PlayerReadyRequest, Player
 from app.schemas.common import SuccessMessage
 
 from ..logger import logger
@@ -10,26 +10,25 @@ router = APIRouter()
 async def get_room_endpoint(room_id: str):
     """Get a game room by room ID"""
 
-    room = await get_room(room_id) 
+    room = await get_room_safe(room_id) 
     return room
 
-@router.post("/room", response_model=Room)
-async def create_room_endpoint(request: CreateNewRoomRequest):
+@router.post("/room", response_model=SuccessMessage)
+async def create_room_endpoint():
     """Create a new game room"""
 
-    room_id = await create_room(request)
-    room = await get_room(room_id)
+    room_id = await create_room()
 
-    return room
+    return SuccessMessage(success=room_id)
 
 
-@router.post("/room/join", response_model=Room)
+@router.post("/room/join", response_model=Player)
 async def join_room_endpoint(request: JoinRoomRequest):
-    """Join an existing room"""
+    """Join an existing room. Returns the player data."""
 
-    room = await join_room(request)
+    player = await join_room(request)
 
-    return room
+    return player
 
 @router.post("/room/ready", response_model=SuccessMessage)
 async def set_ready_endpoint(request: PlayerReadyRequest):

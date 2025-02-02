@@ -5,7 +5,7 @@ import json
 from ..logger import logger
 import uuid
 from fastapi import HTTPException, FastAPI
-from ..schemas.game import Room, CreateNewRoomRequest, Player
+from ..schemas.game import Room, Player, PlayerSafe, get_player_safe
 from ..schemas.chat import Chat
 import aioredis
 from typing import Dict, List
@@ -20,15 +20,15 @@ async def init_redis():
     redis = aioredis.from_url(REDIS_URL, encoding="utf-8", decode_responses=True)
 
 
-async def create_room(request: CreateNewRoomRequest):
+async def create_room():
     
     room_id = str(uuid.uuid4())  # Generate a unique room ID
-    room = Room(room_id=room_id, players=[Player(name=request.host)], host=request.host).model_dump_json()
+    room = Room(room_id=room_id, players=[]).model_dump_json()
     chat = Chat(room_id=room_id, messages=[]).model_dump_json()
     
     await redis.set(f"{room_id}:room", room)
     await redis.set(f"{room_id}:chat", chat)
-    logger.info(f"Creating room {room_id} with player {request.host}")
+    logger.info(f"Created room {room_id}")
     return(room_id)
 
 async def get_room(room_id: str):
@@ -44,15 +44,47 @@ async def get_room(room_id: str):
 
     return(Room.model_validate_json(room))
 
+async def set_owner(player_id: str, room_id: str):
+
+    try:
+        logger.info(f"Setting owner for room {room_id} to {player_id}")
+        tmp_room = await redis.get(f"{room_id}:room")
+        logger.debug(f"Temporary room state: {tmp_room} in room {room_id} before setting owner")
+        room = Room.model_validate_json(tmp_room)
+        room.owner = player_id
+        await redis.set(f"{room_id}:room", room.model_dump_json())
+        
+        logger.info(f"Owner set successfully for room {room_id}")
+        return(True)
+    
+    except Exception as e:
+        error_message = f"Error setting owner {player_id} for room {room_id}: {e}"
+        logger.error(error_message)
+        raise HTTPException(status_code=500, detail=error_message)
+
+
+async def get_room_safe(room_id: str):
+    room = await get_room(room_id)
+    safe_players: List[PlayerSafe] = []
+    for player in room.players:
+        safe_player = get_player_safe(player, PlayerSafe, ["id"])
+        safe_players.append(safe_player)
+    room.players = safe_players
+    return room
+
 async def add_player(player_name: str, room_id: str):
     logger.info(f"Adding player {player_name} to room {room_id}")
 
+    player_id = str(uuid.uuid4())
+    player_cookie = str(uuid.uuid4())
+    player = Player(name=player_name, id=player_id, cookie=player_cookie)
+
     room = Room.model_validate_json(await redis.get(f"{room_id}:room"))
-    room.players.append(Player(name=player_name))
+    room.players.append(player)
     await redis.set(f"{room_id}:room", room.model_dump_json())
     
     logger.debug(f"Current players in room {room_id}: {room.players}")
-    return(True)
+    return(player)
 
 async def get_chat(room_id: str):
     pass

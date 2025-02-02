@@ -1,6 +1,6 @@
 from fastapi import WebSocket, WebSocketDisconnect, HTTPException
-from ..repository.game import create_room, get_room, add_player, update_players
-from ..schemas.game import Room, JoinRoomRequest, PlayerReadyRequest, PlayerReady
+from ..repository.game import create_room, get_room, get_room_safe, add_player, update_players, set_owner
+from ..schemas.game import Room, JoinRoomRequest, PlayerReadyRequest, PlayerReady, Player
 from ..schemas.common import BroadcastMessage
 from .websocket import broadcast_event
 from typing import Dict, List
@@ -14,7 +14,7 @@ async def get_new_room(player_name: str):
     return room_id
 
 async def join_room(request: JoinRoomRequest):
-
+    """Add a new player to a room. Broadcast the updated room state to all connected clients. Return the new user id."""
     logger.info(f"Received request to join room {request.room_id} from player {request.player_name}")
 
     try: 
@@ -38,14 +38,18 @@ async def join_room(request: JoinRoomRequest):
             raise HTTPException (status_code=400, detail=error_message)
         
         # Add player to the room and store it in the Redis database
-        await add_player(request.player_name, request.room_id)
+        player: Player = await add_player(request.player_name, request.room_id)
+
+        # If the room has no owner, set the player as the owner
+        if not room.owner:
+            await set_owner(player.id, request.room_id)
 
         # Send updated room state to all connected clients
-        room = await get_room(request.room_id)
+        room = await get_room_safe(request.room_id)
         await broadcast_event(request.room_id, room)
 
         logger.info(f"Player {request.player_name} joined room {request.room_id} successfully")
-        return room
+        return player
     
     except Exception as e:
         logger.error(f"Error joining room: {e}")
