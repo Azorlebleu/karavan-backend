@@ -11,24 +11,20 @@ async def get_room_endpoint(room_id: str):
     room = await get_room(room_id) 
     return room
 
-@router.post("/room/", response_model=Room)
+@router.post("/room", response_model=Room)
 async def create_room_endpoint(request: CreateNewRoomRequest):
     """Create a new game room"""
+
     room_id = await create_room(request)
     room = await get_room(room_id)
 
-    if not room:
-        raise HTTPException(status_code=400, detail="Failed to create room.")
-
-    # Return the room directly as the response model expects a `Room` object
     return room
 
 
-@router.post("/room/join/", response_model=Room)
+@router.post("/room/join", response_model=Room)
 async def join_room_endpoint(request: JoinRoomRequest):
     """Join an existing room"""
 
     room = await join_room(request)
-    if "error" in room:
-        raise HTTPException(status_code=400, detail=room["reason"])
+
     return room

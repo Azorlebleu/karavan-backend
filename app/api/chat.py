@@ -17,7 +17,7 @@ async def get_chat_endpoint(room_id: str):
 
     return chat
 
-@router.post("/chat/", response_model=SuccessMessage)
+@router.post("/chat", response_model=SuccessMessage)
 async def send_message_endpoint(request: NewMessageRequest):
 
     message_sent = await handle_send_message(request)  
