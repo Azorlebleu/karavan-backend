@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException
-from app.services.game import get_room_safe, create_room, join_room, handle_player_ready
-from app.schemas.game import Room, ErrorResponse, JoinRoomRequest, PlayerReadyRequest, Player
+from app.services.game import get_room_safe, create_room, join_room, handle_player_ready, get_player_safe
+from app.schemas.game import Room, ErrorResponse, JoinRoomRequest, PlayerReadyRequest, Player, PlayerSafe
 from app.schemas.common import SuccessMessage
 
 from ..logger import logger
@@ -35,3 +35,9 @@ async def set_ready_endpoint(request: PlayerReadyRequest):
     """Set a player as ready"""
     await handle_player_ready(request)
     return SuccessMessage(success="Player ready state stored successfully!")
+
+@router.get("/player/{room_id}/{player_id}", response_model=PlayerSafe)
+async def get_player_endpoint(room_id: str, player_id: str):
+    """Get player data by player ID"""
+    player_safe = await get_player_safe(room_id, player_id)
+    return player_safe

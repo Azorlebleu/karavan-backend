@@ -1,6 +1,6 @@
 from fastapi import WebSocket, WebSocketDisconnect, HTTPException
 from ..repository.game import create_room, get_room, get_room_safe, add_player, update_players, set_owner
-from ..schemas.game import Room, JoinRoomRequest, PlayerReadyRequest, PlayerReady, Player
+from ..schemas.game import Room, RoomSafe, JoinRoomRequest, PlayerReadyRequest, PlayerReady, Player
 from ..schemas.common import BroadcastMessage
 from .websocket import broadcast_event
 from typing import Dict, List
@@ -88,5 +88,24 @@ async def handle_player_ready(request: PlayerReadyRequest):
             logger.info(f"All players in room {request.room_id} are ready")
 
     except Exception as e:
-        logger.error(f"Error handling player ready status in room {request.room_id}: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"An error occurred while handling player ready status: {e}")
+        error_message = f"Error handling player ready status in room {request.room_id}: {str(e)}"
+        logger.error(error_message)
+        raise HTTPException(status_code=500, detail=error_message)
+    
+async def get_player_safe(room_id: str, player_id: str):
+    """Get a player from a room safely, without exposing sensitive information."""
+    try: 
+
+        room_safe: RoomSafe = await get_room_safe(room_id)
+        player_safe = next((p for p in room_safe.players if p.id == player_id), None)
+        if not player_safe:
+            error_message = f"Player with ID {player_id} not found in room {room_id}"
+            logger.info(error_message)
+            raise HTTPException(status_code=404, detail=error_message)
+
+        return player_safe
+
+    except Exception as e:
+        error_message = f"Error getting player safe information: {str(e)}"
+        logger.error(error_message)
+        raise HTTPException(status_code=500, detail=error_message)

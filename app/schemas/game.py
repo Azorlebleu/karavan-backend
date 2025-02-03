@@ -26,6 +26,10 @@ class Room(BaseModel):
     owner: Optional[str] = None
     players: List[Player] = Field(default=[])
 
+class RoomSafe(BaseModel):
+    room_id: str
+    owner: Optional[str] = None
+    players_safe: List[PlayerSafe] = Field(default=[])
 
 class RoomResponse(BaseModel):
     room: Room
