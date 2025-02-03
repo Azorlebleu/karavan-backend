@@ -92,7 +92,7 @@ async def handle_player_ready(request: PlayerReadyRequest):
         logger.error(error_message)
         raise HTTPException(status_code=500, detail=error_message)
     
-async def get_player_safe(room_id: str, player_id: str):
+async def get_player_safe_by_id(room_id: str, player_id: str):
     """Get a player from a room safely, without exposing sensitive information."""
     try: 
 
@@ -107,5 +107,24 @@ async def get_player_safe(room_id: str, player_id: str):
 
     except Exception as e:
         error_message = f"Error getting player safe information: {str(e)}"
+        logger.error(error_message)
+        raise HTTPException(status_code=500, detail=error_message)
+    
+
+async def get_player_safe_by_cookie(room_id: str, cookie: str):
+    """Get a player from a room safely, without exposing sensitive information."""
+    try: 
+
+        room: Room = await get_room(room_id)
+        player: Player = next((p for p in room.players if p.cookie == cookie), None)
+        if not player:
+            error_message = f"Player with cookie {cookie} not found in room {room_id}"
+            logger.info(error_message)
+            raise HTTPException(status_code=404, detail=error_message)
+
+        return player
+
+    except Exception as e:
+        error_message = f"Error getting player information: {str(e)}"
         logger.error(error_message)
         raise HTTPException(status_code=500, detail=error_message)
