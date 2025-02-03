@@ -21,12 +21,11 @@ app = FastAPI()
 # Handle CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Allow all origins
+    allow_origins=["http://localhost:5173"],  # Specify exact origin
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
 # Create a Redis client
 async def get_redis():
     return await aioredis.from_url(REDIS_URL, decode_responses=True)
