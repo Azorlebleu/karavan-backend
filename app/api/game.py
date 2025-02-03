@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Request, Response
 from app.services.game import get_room_safe, create_room, join_room, handle_player_ready, get_player_safe_by_id, get_player_safe_by_cookie
 from app.schemas.game import Room, ErrorResponse, JoinRoomRequest, PlayerReadyRequest, Player, PlayerSafe
 from app.schemas.common import SuccessMessage
@@ -22,13 +22,15 @@ async def create_room_endpoint():
     return SuccessMessage(success=room_id)
 
 
-@router.post("/room/join", response_model=Player)
-async def join_room_endpoint(request: JoinRoomRequest):
-    """Join an existing room. Returns the player data."""
+@router.post("/room/join", response_model=PlayerSafe)
+async def join_room_endpoint(request: JoinRoomRequest, response: Response) -> Response:
+    """Join an existing room. Sets the player's cookie"""
 
-    player = await join_room(request)
+    data = await join_room(request)
+    logger.debug(f"Data: {data}")
+    response.set_cookie(key="player_cookie", value=data.cookie, secure=False)
 
-    return player
+    return data.player
 
 @router.post("/room/ready", response_model=SuccessMessage)
 async def set_ready_endpoint(request: PlayerReadyRequest):
@@ -36,14 +38,15 @@ async def set_ready_endpoint(request: PlayerReadyRequest):
     await handle_player_ready(request)
     return SuccessMessage(success="Player ready state stored successfully!")
 
-@router.get("/player/{room_id}/id/{player_id}", response_model=PlayerSafe)
-async def get_player_endpoint(room_id: str, player_id: str):
+@router.get("/player/{room_id}/{player_id}", response_model=PlayerSafe)
+async def get_player_by_id_endpoint(room_id: str, player_id: str):
     """Get player data by player ID"""
     player_safe = await get_player_safe_by_id(room_id, player_id)
     return player_safe
 
-@router.get("/player/{room_id}/cookie/{cookie}", response_model=PlayerSafe)
-async def get_player_endpoint(room_id: str, cookie: str):
+@router.get("/player/{room_id}", response_model=PlayerSafe)
+async def get_player_by_cookie_endpoint(room_id: str, request: Request):
     """Get player data by player ID"""
-    player_safe = await get_player_safe_by_cookie(room_id, cookie)
+    player_cookie = request.cookies.get("player_cookie")
+    player_safe = await get_player_safe_by_cookie(room_id, player_cookie)
     return player_safe

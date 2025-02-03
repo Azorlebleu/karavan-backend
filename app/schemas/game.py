@@ -2,12 +2,6 @@ from pydantic import BaseModel, Field
 from typing import Optional, List, Type, TypeVar, Set
 from .chat import Chat
 
-
-T = TypeVar("T", bound=BaseModel)
-def get_player_safe(model: BaseModel, target_model: Type[T], fields: Set[str]) -> T:
-    """Extract specific fields from one Pydantic model to create another."""
-    return target_model(**model.model_dump(exclude=["cookie"]))
-
 class Player(BaseModel):
     name: str
     id: str
@@ -20,6 +14,17 @@ class PlayerSafe(BaseModel):
     id: str
     ready: Optional[bool] = Field(default=False)
     connected: Optional[bool] = Field(default=True)
+
+
+class JoinRoomResponse(BaseModel):
+    cookie: str
+    player: PlayerSafe
+
+
+def get_player_safe(player: Player) -> PlayerSafe:
+    """Extract specific fields from one Pydantic model to create another."""
+    return PlayerSafe(**player.model_dump(exclude=["cookie"]))
+
 
 class Room(BaseModel):
     room_id: str

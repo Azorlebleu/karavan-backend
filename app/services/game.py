@@ -1,6 +1,6 @@
 from fastapi import WebSocket, WebSocketDisconnect, HTTPException
 from ..repository.game import create_room, get_room, get_room_safe, add_player, update_players, set_owner
-from ..schemas.game import Room, RoomSafe, JoinRoomRequest, PlayerReadyRequest, PlayerReady, Player
+from ..schemas.game import Room, RoomSafe, JoinRoomRequest, PlayerReadyRequest, PlayerReady, Player, PlayerSafe, get_player_safe, JoinRoomResponse
 from ..schemas.common import BroadcastMessage
 from .websocket import broadcast_event
 from typing import Dict, List
@@ -48,8 +48,13 @@ async def join_room(request: JoinRoomRequest):
         room = await get_room_safe(request.room_id)
         await broadcast_event(request.room_id, room)
 
+        # Retrieve the player safe and its cookie
+        player_safe: PlayerSafe = get_player_safe(player)
+        cookie: str = player.cookie
+        
         logger.info(f"Player {request.player_name} joined room {request.room_id} successfully")
-        return player
+        logger.debug(f"Cookie for player {request.player_name}: {cookie} retrieved successfully")
+        return JoinRoomResponse(player=player_safe, cookie=cookie)
     
     except Exception as e:
         logger.error(f"Error joining room: {e}")

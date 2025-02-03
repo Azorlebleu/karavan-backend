@@ -65,11 +65,11 @@ async def set_owner(player_id: str, room_id: str):
 
 async def get_room_safe(room_id: str):
     room = await get_room(room_id)
-    safe_players: List[PlayerSafe] = []
+    players_safe: List[PlayerSafe] = []
     for player in room.players:
-        safe_player = get_player_safe(player, PlayerSafe, ["id"])
-        safe_players.append(safe_player)
-    room.players = safe_players
+        player_safe: PlayerSafe = get_player_safe(player)
+        players_safe.append(player_safe)
+    room.players = players_safe
     return room
 
 async def add_player(player_name: str, room_id: str):
