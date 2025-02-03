@@ -28,7 +28,7 @@ async def join_room_endpoint(request: JoinRoomRequest, response: Response) -> Re
 
     data = await join_room(request)
     logger.debug(f"Data: {data}")
-    response.set_cookie(key="player_cookie", value=data.cookie, secure=False)
+    response.set_cookie(key="player_cookie", value=data.cookie, httponly=True, secure=True, samesite="none")
 
     return data.player
 
