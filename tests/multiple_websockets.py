@@ -2,8 +2,8 @@ import asyncio
 import websockets
 import random as rd
 
-WEBSOCKET_URL = "ws://pedro.elelievre.fr:8000/ws"  
-room_id = "59f45f47-b67e-415e-93a9-c22f3637433a"
+WEBSOCKET_URL = "ws://karavan-back.pedro.elelievre.fr:8000/ws"  
+room_id = "e04a1bb2-79a8-4371-9496-e7a39802a375"
 players = ["Pedro", "Nhien", "Barbara", "Robi", "Jérôme"]
 
 # Function to handle a single WebSocket connection

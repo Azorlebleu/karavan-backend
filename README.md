@@ -63,3 +63,8 @@ sudo systemctl start redis
 pip3 install -r requirements.txt
 ```
 
+
+
+## Certificates
+Date d'émission	lundi 3 février 2025 à 23:47:08
+Date d'expiration	lundi 5 mai 2025 à 00:47:07
