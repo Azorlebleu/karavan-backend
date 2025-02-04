@@ -1,21 +1,23 @@
-from fastapi import APIRouter, HTTPException, Request, Response
-from app.services.game import get_room_safe, create_room, join_room, handle_player_ready, get_player_safe_by_id, get_player_safe_by_cookie
-from app.schemas.game import Room, ErrorResponse, JoinRoomRequest, PlayerReadyRequest, Player, PlayerSafe
+from fastapi import APIRouter, Request, Response
+from app.services.room import get_room_safe, create_room, join_room, handle_player_ready, get_player_safe_by_id, get_player_safe_by_cookie
+
+from app.schemas.room import Room, JoinRoomRequest, PlayerReadyRequest, PlayerSafe
 from app.schemas.common import SuccessMessage
 
 from ..logger import logger
+
 router = APIRouter()
 
 @router.get("/room/{room_id}", response_model=Room)
 async def get_room_endpoint(room_id: str):
-    """Get a game room by room ID"""
+    """Get a room room by room ID"""
 
     room = await get_room_safe(room_id) 
     return room
 
 @router.post("/room", response_model=SuccessMessage)
 async def create_room_endpoint():
-    """Create a new game room"""
+    """Create a new room room"""
 
     room_id = await create_room()
 

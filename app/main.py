@@ -1,12 +1,12 @@
 
 from fastapi import FastAPI
 from app.models.database import database
-from app.repository.game import init_redis as redis_game_init
+from app.repository.room import init_redis as redis_room_init
 from app.repository.chat import init_redis as redis_chat_init
 
 from fastapi.middleware.cors import CORSMiddleware
 from app.api.websocket import router as websocket_router
-from app.api.game import router as game_router
+from app.api.room import router as room_router
 from app.api.chat import router as chat_router
 import aioredis
 from fastapi.responses import JSONResponse
@@ -30,7 +30,7 @@ app.add_middleware(
 @app.on_event("startup")
 async def startup():
     await database.connect()
-    await redis_game_init()
+    await redis_room_init()
     await redis_chat_init()
 
 @app.on_event("shutdown")
@@ -39,7 +39,7 @@ async def shutdown():
 
 # Include API routers
 app.include_router(websocket_router)
-app.include_router(game_router)
+app.include_router(room_router)
 app.include_router(chat_router)
 
 @app.get("/")

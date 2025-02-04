@@ -1,5 +1,5 @@
 from fastapi import WebSocket, WebSocketDisconnect
-from ..repository.game import add_player
+from ..repository.room import add_player
 from ..schemas.chat import Message, NewMessageRequest
 from ..schemas.common import BroadcastMessage, BroadcastMessageRequest
 from typing import Dict, List, TypeVar, Generic
@@ -31,9 +31,9 @@ async def websocket_endpoint_test(websocket: WebSocket):
         logger.info("Test WebSocket disconnected")
 
 
-async def game_websocket(websocket: WebSocket, room_id: str, player: str):
+async def room_websocket(websocket: WebSocket, room_id: str, player: str):
 
-    logger.info(f"Game WebSocket connected to room {room_id} with player {player}")
+    logger.info(f"room WebSocket connected to room {room_id} with player {player}")
     
     if room_id not in active_rooms:
         logger.info(f"Creating new room {room_id}")

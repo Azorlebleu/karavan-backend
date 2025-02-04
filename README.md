@@ -21,7 +21,7 @@ karaoke-backend/
 │   ├── database.py          # Database setup
 │   ├── models.py            # Database models
 │   ├── crud.py              # DB operations
-│   ├── game_manager.py      # Redis-based room management
+│   ├── room_manager.py      # Redis-based room management
 │   ├── websocket.py         # WebSocket handling
 │── .env                     # Config variables
 │── requirements.txt         # Installed packages

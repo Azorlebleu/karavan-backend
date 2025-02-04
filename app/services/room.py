@@ -1,6 +1,6 @@
 from fastapi import WebSocket, WebSocketDisconnect, HTTPException
-from ..repository.game import create_room, get_room, get_room_safe, add_player, update_players, set_owner
-from ..schemas.game import Room, RoomSafe, JoinRoomRequest, PlayerReadyRequest, PlayerReady, Player, PlayerSafe, get_player_safe, JoinRoomResponse
+from ..repository.room import create_room, get_room, get_room_safe, add_player, update_players, set_owner
+from ..schemas.room import Room, RoomSafe, JoinRoomRequest, PlayerReadyRequest, PlayerReady, Player, PlayerSafe, get_player_safe, JoinRoomResponse
 from ..schemas.common import BroadcastMessage, BroadcastMessageRequest
 from .websocket import broadcast_event
 from typing import Dict, List

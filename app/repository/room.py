@@ -5,7 +5,7 @@ import json
 from ..logger import logger
 import uuid
 from fastapi import HTTPException, FastAPI
-from ..schemas.game import Room, Player, PlayerSafe, get_player_safe
+from ..schemas.room import Room, Player, PlayerSafe, get_player_safe
 from ..schemas.chat import Chat
 import aioredis
 from typing import Dict, List

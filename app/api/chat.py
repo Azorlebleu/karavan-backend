@@ -1,9 +1,12 @@
 from fastapi import APIRouter, HTTPException
+
 from app.services.chat import get_ordered_chat, handle_send_message
+
 from app.schemas.chat import Chat, NewMessageRequest
 from app.schemas.common import SuccessMessage
-from app.repository.chat import add_message
+
 from ..logger import logger
+
 router = APIRouter()
 
 @router.get("/chat/{room_id}", response_model=Chat)
