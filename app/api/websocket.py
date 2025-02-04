@@ -1,5 +1,5 @@
 from fastapi import APIRouter, WebSocket
-from app.services.websocket import game_websocket, websocket_endpoint_test, broadcast_event
+from app.services.websocket import game_websocket, websocket_endpoint_test
 
 router = APIRouter()
 

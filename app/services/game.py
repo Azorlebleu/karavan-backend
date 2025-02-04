@@ -1,11 +1,11 @@
 from fastapi import WebSocket, WebSocketDisconnect, HTTPException
 from ..repository.game import create_room, get_room, get_room_safe, add_player, update_players, set_owner
 from ..schemas.game import Room, RoomSafe, JoinRoomRequest, PlayerReadyRequest, PlayerReady, Player, PlayerSafe, get_player_safe, JoinRoomResponse
-from ..schemas.common import BroadcastMessage
+from ..schemas.common import BroadcastMessage, BroadcastMessageRequest
 from .websocket import broadcast_event
 from typing import Dict, List
 from ..logger import logger
-from ..settings import MAX_PLAYERS, MSG_ALL_PLAYERS_READY
+from ..settings import MAX_PLAYERS, MSG_ALL_PLAYERS_READY, TYPE_ALL_PLAYERS_READY, TYPE_PLAYER_READY, TYPE_ROOM_STATE
 
 async def get_new_room(player_name: str):
     logger.info(f"Received request to create a new room from player {player_name}")
@@ -46,7 +46,7 @@ async def join_room(request: JoinRoomRequest):
 
         # Send updated room state to all connected clients
         room = await get_room_safe(request.room_id)
-        await broadcast_event(request.room_id, room)
+        await broadcast_event(BroadcastMessageRequest(room_id=request.room_id, type=TYPE_ROOM_STATE), room)
 
         # Retrieve the player safe and its cookie
         player_safe: PlayerSafe = get_player_safe(player)
@@ -84,12 +84,12 @@ async def handle_player_ready(request: PlayerReadyRequest):
             raise HTTPException(status_code=500, detail=error_message)
         
         # Broadast that a player is ready
-        await broadcast_event(request.room_id, PlayerReady(player_name=request.player_name, ready=request.ready))
+        await broadcast_event(BroadcastMessageRequest(room_id=request.room_id, type=TYPE_PLAYER_READY), PlayerReady(player_name=request.player_name, ready=request.ready))
 
         # If all players are ready, broadcast a "all players ready" event
         players = (await get_room(request.room_id)).players
         if all(player.ready for player in players):
-            await broadcast_event(request.room_id, BroadcastMessage(value=MSG_ALL_PLAYERS_READY))
+            await broadcast_event(BroadcastMessageRequest(room_id=request.room_id, type=TYPE_ALL_PLAYERS_READY), None)
             logger.info(f"All players in room {request.room_id} are ready")
 
     except Exception as e:

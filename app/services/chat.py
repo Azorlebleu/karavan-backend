@@ -4,8 +4,9 @@ from ..repository.chat import get_chat, add_message
 from .websocket import active_rooms,  broadcast_event
 from ..schemas.game import Room
 from ..schemas.chat import Message, NewMessageRequest
+from ..schemas.common import BroadcastMessageRequest
 from ..logger import logger
-from ..settings import MAX_PLAYERS
+from ..settings import MAX_PLAYERS, TYPE_NEW_MESSAGE
 from datetime import datetime
 
 
@@ -57,7 +58,7 @@ async def handle_send_message(request: NewMessageRequest):
         logger.debug(f"Message from {request.message.sender} in room {request.room_id} has been stored in Redis")
 
     # Send the message to all connected clients in the room
-    message_brodcast_websocket = await broadcast_event(request.room_id, request.message)
+    message_brodcast_websocket = await broadcast_event(BroadcastMessageRequest(room_id=request.room_id, type=TYPE_NEW_MESSAGE), request.message)
     if message_brodcast_websocket:
         logger.debug(f"Message from {request.message.sender} in room {request.room_id} has been broadcasted to all clients")
 

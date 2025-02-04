@@ -3,7 +3,8 @@ import websockets
 import random as rd
 
 WEBSOCKET_URL = "ws://karavan-back.pedro.elelievre.fr:8000/ws"  
-room_id = "e04a1bb2-79a8-4371-9496-e7a39802a375"
+WEBSOCKET_URL = "ws://localhost:8000/ws"  
+room_id = "219b632b-bc52-4732-92fc-3d4968e69b49"
 players = ["Pedro", "Nhien", "Barbara", "Robi", "Jérôme"]
 
 # Function to handle a single WebSocket connection

@@ -1,6 +1,7 @@
 from fastapi import WebSocket, WebSocketDisconnect
 from ..repository.game import add_player
 from ..schemas.chat import Message, NewMessageRequest
+from ..schemas.common import BroadcastMessage, BroadcastMessageRequest
 from typing import Dict, List, TypeVar, Generic
 from ..logger import logger
 from fastapi import HTTPException
@@ -51,24 +52,25 @@ async def game_websocket(websocket: WebSocket, room_id: str, player: str):
     except WebSocketDisconnect:
         active_rooms[room_id].remove(websocket)
 
-async def broadcast_event(room_id: str, request: T) -> bool:
+async def broadcast_event(request: BroadcastMessageRequest, model: T) -> bool:
 
-    logger.debug(f"Broadcasting {request} in room {room_id}")
+    logger.debug(f"Broadcasting {model} in room {request.room_id}")
     try:
 
-        if room_id not in active_rooms:
-            error_message = f"No active websocket for room {room_id} found"
+        if request.room_id not in active_rooms:
+            error_message = f"No active websocket for room {request.room_id} found"
             logger.error(error_message)
             raise HTTPException(status_code=404, detail=error_message)
         
-        logger.debug(f"{len(active_rooms[room_id])} players in room {room_id}")
+        logger.debug(f"{len(active_rooms[request.room_id])} players in room {request.room_id}")
+        message = BroadcastMessage(type=request.type, content=model.model_dump_json())
 
-        for connection in active_rooms[room_id]:
-            await connection.send_text(request.model_dump_json())
+        for connection in active_rooms[request.room_id]:
+            await connection.send_text(message.model_dump_json())
 
-        logger.debug(f"Message broadcasted successfully in room {room_id}")
+        logger.debug(f"Message broadcasted successfully in room {request.room_id}")
         return(True)
 
     except Exception as e:
-        logger.warning(f"Error while broadcasting {request} in room {room_id}: {e}")
+        logger.warning(f"Error while broadcasting {model} in room {request.room_id}: {e}")
         return(False)
