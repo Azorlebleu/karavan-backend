@@ -1,6 +1,7 @@
 from pydantic import BaseModel, Field
 from typing import Optional, List, Type, TypeVar, Set
 from .chat import Chat
+from .game import Game
 
 class Player(BaseModel):
     name: str
@@ -8,12 +9,14 @@ class Player(BaseModel):
     ready: Optional[bool] = Field(default=False)
     connected: Optional[bool] = Field(default=True)
     cookie: str
+    score: Optional[int] = Field(default=0)
 
 class PlayerSafe(BaseModel):
     name: str
     id: str
     ready: Optional[bool] = Field(default=False)
     connected: Optional[bool] = Field(default=True)
+    score: Optional[int] = Field(default=0)
 
 
 class JoinRoomResponse(BaseModel):
@@ -30,6 +33,7 @@ class Room(BaseModel):
     room_id: str
     owner: Optional[str] = None
     players: List[Player] = Field(default=[])
+    game: Optional[Game] = None
 
 class RoomSafe(BaseModel):
     room_id: str

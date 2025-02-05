@@ -1,12 +1,15 @@
 
 import os
 from dotenv import load_dotenv
-import json
+
 from ..logger import logger
-import uuid
-from fastapi import HTTPException, FastAPI
-from ..schemas.room import Room, Player, PlayerSafe, get_player_safe
-from ..schemas.chat import Chat
+
+from ..schemas.room import Room
+from ..schemas.game import Game, GameStatus
+
+from .room import get_room, update_room
+from random import shuffle
+
 import aioredis
 from typing import Dict, List
 
@@ -20,14 +23,14 @@ async def init_redis():
     redis = aioredis.from_url(REDIS_URL, encoding="utf-8", decode_responses=True)
 
 
-async def create_room():
-    
-    room_id = str(uuid.uuid4())  # Generate a unique room ID
-    room = Room(room_id=room_id, players=[]).model_dump_json()
-    chat = Chat(room_id=room_id, messages=[]).model_dump_json()
-    
-    await redis.set(f"{room_id}:room", room)
-    await redis.set(f"{room_id}:chat", chat)
-    logger.info(f"Created room {room_id}")
-    return(room_id)
 
+async def setup_new_game(room_id: str):
+    room: Room = await get_room(room_id)
+
+    player_ids = [player.id for player in room.players]
+    shuffle(player_ids)
+
+    room.game.turns = player_ids
+
+    await update_room(room)
+    

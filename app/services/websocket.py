@@ -52,7 +52,7 @@ async def room_websocket(websocket: WebSocket, room_id: str, player: str):
     except WebSocketDisconnect:
         active_rooms[room_id].remove(websocket)
 
-async def broadcast_event(request: BroadcastMessageRequest, model: T) -> bool:
+async def broadcast_event(request: BroadcastMessageRequest, model: T|str) -> bool:
 
     logger.debug(f"Broadcasting {model} in room {request.room_id}")
     try:
@@ -63,7 +63,10 @@ async def broadcast_event(request: BroadcastMessageRequest, model: T) -> bool:
             raise HTTPException(status_code=404, detail=error_message)
         
         logger.debug(f"{len(active_rooms[request.room_id])} players in room {request.room_id}")
-        message = BroadcastMessage(type=request.type, content=model.model_dump_json())
+
+        if type(model) != str:
+            model = model.model_dump_json()
+        message = BroadcastMessage(type=request.type, content=model)
 
         for connection in active_rooms[request.room_id]:
             await connection.send_text(message.model_dump_json())

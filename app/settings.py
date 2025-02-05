@@ -1,8 +1,16 @@
 MAX_PLAYERS = 5
 MSG_ALL_PLAYERS_READY = "All players ready!"
 
-TYPE_ALL_PLAYERS_READY = "all_players_ready"
-TYPE_NEW_MESSAGE = "new_message"
-TYPE_PLAYER_READY = "player_ready"
-TYPE_ROOM_STATE = "room_state"
-TYPE_GAME_START = "game_start"
+MESSAGE_TYPE_WAITING_FOR_PLAYERS = "waiting_for_players"
+MESSAGE_TYPE_ALL_PLAYERS_READY = "all_players_ready"
+MESSAGE_TYPE_NEW_MESSAGE = "new_message"
+MESSAGE_TYPE_PLAYER_READY = "player_ready"
+MESSAGE_TYPE_ROOM_STATE = "room_state"
+MESSAGE_TYPE_GAME_START = "game_start"
+
+GAME_STATUS_INITIALIZED = "initialized"
+GAME_STATUS_WAITING_PLAYERS = "waiting_players"
+GAME_STATUS_WAITING_OWNER = "waiting_owner"
+GAME_STATUS_PLAYING_ROUND = "playing_round"
+GAME_STATUS_CHOOSING_SONG = "choosing_song"
+GAME_STATUS_FINISHED = "finished"

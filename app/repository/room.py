@@ -7,13 +7,14 @@ import uuid
 from fastapi import HTTPException, FastAPI
 from ..schemas.room import Room, Player, PlayerSafe, get_player_safe
 from ..schemas.chat import Chat
+from ..schemas.game import Game, GameStatus
 import aioredis
 from typing import Dict, List
+from ..settings import GAME_STATUS_INITIALIZED
 
 load_dotenv()
 REDIS_URL = os.getenv("REDIS_URL")
 redis = None
-MAX_PLAYERS_PER_ROOM = 5
 
 async def init_redis():
     global redis
@@ -23,7 +24,9 @@ async def init_redis():
 async def create_room():
     
     room_id = str(uuid.uuid4())  # Generate a unique room ID
-    room = Room(room_id=room_id, players=[]).model_dump_json()
+    game: Game = Game(status=GameStatus(type=GAME_STATUS_INITIALIZED), current_turn=0, turns=[])
+    
+    room = Room(room_id=room_id, players=[], game=game).model_dump_json()
     chat = Chat(room_id=room_id, messages=[]).model_dump_json()
     
     await redis.set(f"{room_id}:room", room)
@@ -98,3 +101,17 @@ async def update_players(room_id: str, players: List[Player]):
     
     logger.debug(f"Players updated successfully in room {room_id}: {room.players}")
     return(True)
+
+async def update_room(room: Room):
+    try:
+
+        logger.debug(f"Updating room {room.room_id} with {room}")
+
+        await redis.set(f"{room.room_id}:room", room.model_dump_json())
+        
+        logger.debug(f"Room updated successfully in room {room.room_id}")
+    
+    except Exception as e:
+        error_message = f"Error updating room {room.room_id}: {e}"
+        logger.error(error_message)
+        raise HTTPException(status_code=500, detail=error_message)
