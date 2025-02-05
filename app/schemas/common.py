@@ -10,3 +10,6 @@ class BroadcastMessage(BaseModel):
 class BroadcastMessageRequest(BaseModel):
     room_id: str
     type: str
+
+class Text(BaseModel):
+    content: str
