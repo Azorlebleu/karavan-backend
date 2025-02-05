@@ -2,7 +2,7 @@ from fastapi import WebSocket, WebSocketDisconnect
 from ..repository.room import add_player
 from ..schemas.chat import Message, NewMessageRequest
 from ..schemas.common import BroadcastMessage, BroadcastMessageRequest
-from typing import Dict, List, TypeVar, Generic
+from typing import Dict, List, TypeVar, Generic, Union
 from ..logger import logger
 from fastapi import HTTPException
 import json
@@ -52,7 +52,7 @@ async def room_websocket(websocket: WebSocket, room_id: str, player: str):
     except WebSocketDisconnect:
         active_rooms[room_id].remove(websocket)
 
-async def broadcast_event(request: BroadcastMessageRequest, model: T|str) -> bool:
+async def broadcast_event(request: BroadcastMessageRequest, model: Union[T, str]) -> bool:
 
     logger.debug(f"Broadcasting {model} in room {request.room_id}")
     try:
