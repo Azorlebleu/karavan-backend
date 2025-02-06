@@ -14,3 +14,7 @@ GAME_STATUS_WAITING_OWNER = "waiting_owner"
 GAME_STATUS_PLAYING_ROUND = "playing_round"
 GAME_STATUS_CHOOSING_SONG = "choosing_song"
 GAME_STATUS_FINISHED = "finished"
+
+ROOM_STATUS_WAITING = "waiting"
+ROOM_STATUS_PLAYING = "playing"
+ROOM_STATUS_FINISHED = "finished"

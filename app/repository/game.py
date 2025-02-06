@@ -31,6 +31,7 @@ async def setup_new_game(room_id: str):
     shuffle(player_ids)
 
     room.game.turns = player_ids
-
+    room.room_state = "playing"
+    
     await update_room(room)
     

@@ -26,7 +26,7 @@ async def create_room():
     room_id = str(uuid.uuid4())  # Generate a unique room ID
     game: Game = Game(status=GameStatus(type=GAME_STATUS_INITIALIZED), current_turn=0, turns=[])
     
-    room = Room(room_id=room_id, players=[], game=game).model_dump_json()
+    room = Room(room_id=room_id, players=[], game=game, room_state="waiting").model_dump_json()
     chat = Chat(room_id=room_id, messages=[]).model_dump_json()
     
     await redis.set(f"{room_id}:room", room)

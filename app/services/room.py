@@ -120,7 +120,7 @@ async def get_player_safe_by_id(room_id: str, player_id: str):
     """Get a player from a room safely, without exposing sensitive information."""
     try: 
 
-        room_safe: RoomSafe = await get_room_safe(room_id)
+        room_safe: Room = await get_room_safe(room_id)
         player_safe = next((p for p in room_safe.players if p.id == player_id), None)
         if not player_safe:
             error_message = f"Player with ID {player_id} not found in room {room_id}"
