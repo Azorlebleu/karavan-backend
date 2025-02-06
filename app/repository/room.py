@@ -7,10 +7,10 @@ import uuid
 from fastapi import HTTPException, FastAPI
 from ..schemas.room import Room, Player, PlayerSafe, get_player_safe
 from ..schemas.chat import Chat
-from ..schemas.game import Game, GameStatus
+from ..schemas.game import Game, GameStatus, GameConfig
 import aioredis
 from typing import Dict, List
-from ..settings import GAME_STATUS_INITIALIZED
+from ..settings import *
 
 load_dotenv()
 REDIS_URL = os.getenv("REDIS_URL")
@@ -24,7 +24,9 @@ async def init_redis():
 async def create_room():
     
     room_id = str(uuid.uuid4())  # Generate a unique room ID
-    game: Game = Game(status=GameStatus(type=GAME_STATUS_INITIALIZED), current_turn=0, turns=[])
+
+    game_config: GameConfig = GameConfig(num_rounds=GAME_CONFIG_NUMBER_OF_ROUNDS, round_duration=GAME_CONFIG_ROUND_DURATION) 
+    game: Game = Game(status=GameStatus(type=GAME_STATUS_INITIALIZED), current_round=0, rounds=[], config=game_config)
     
     room = Room(room_id=room_id, players=[], game=game, room_state="waiting").model_dump_json()
     chat = Chat(room_id=room_id, messages=[]).model_dump_json()

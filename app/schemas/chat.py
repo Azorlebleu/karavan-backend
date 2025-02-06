@@ -4,7 +4,7 @@ from typing import Optional, List
 
 class Message(BaseModel):
     content: str
-    sender: str
+    sender_id: str
     timestamp: Optional[str] = None
 
 class NewMessageRequest(BaseModel):

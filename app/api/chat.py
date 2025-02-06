@@ -22,7 +22,7 @@ async def get_chat_endpoint(room_id: str):
 @router.post("/chat", response_model=SuccessMessage)
 async def send_message_endpoint(request: NewMessageRequest):
 
-    logger.debug(f"Sending message to room {request.room_id} from {request.message.sender} with content: {request.message.content}")
+    logger.debug(f"Sending message to room {request.room_id} from {request.message.sender_id} with content: {request.message.content}")
     await handle_send_message(request)  
 
     return SuccessMessage(success="Message sent successfully!")

@@ -7,11 +7,14 @@ from .websocket import active_rooms,  broadcast_event
 from ..schemas.room import Room
 from ..schemas.chat import Message, NewMessageRequest
 from ..schemas.common import BroadcastMessageRequest, SuccessMessage, Text
+from ..schemas.game import GameTasks, Round
+
 from ..logger import logger
-from ..settings import MAX_PLAYERS, MESSAGE_TYPE_NEW_MESSAGE, MESSAGE_TYPE_GAME_START
+from ..settings import MESSAGE_TYPE_GAME_START, MESSAGE_TYPE_ROUND_ENDED_PREMATURELY
 import asyncio
 
-game_tasks = {}
+all_game_tasks = {}
+round_cancellations = {}
 
 async def handle_start_game(room_id: str):
     logger.info(f"Received request to start game for room {room_id}")
@@ -34,17 +37,87 @@ async def handle_start_game(room_id: str):
     # Initialize the room and the game state
     await setup_new_game(room_id)
 
-    asyncio.create_task(start_game(room_id))
+    # Run the game loop
+    task: asyncio.Task = asyncio.create_task(start_game(room_id))
+    game_tasks = GameTasks(main=task, round=None)
+    all_game_tasks[room_id] = game_tasks
 
     return SuccessMessage(success=f"Game started in room {room_id}")
+
+async def start_round(room_id: str, round: Round, round_number: int):
+    logger.info(f"Starting round {round_number} in room {room_id}")
+
+    # Register cancellation event for this round
+    if room_id not in round_cancellations:
+        round_cancellations[room_id] = asyncio.Event()
+    else:
+        round_cancellations[room_id].clear()  # Reset if it was previously set
+
+    # Retrieve the room for further processing
+    room: Room = await get_room(room_id)
+
+    # Countdown timer from 10 to 0
+    for timer in range(10, -1, -1):
+        if round_cancellations[room_id].is_set():
+            logger.info(f"Round {round_number} in room {room_id} ended prematurely.")
+            await broadcast_event(
+                BroadcastMessageRequest(room_id=room.room_id, type=MESSAGE_TYPE_ROUND_ENDED_PREMATURELY),
+                Text(content="Round ended prematurely")
+            )
+            return  # << Return instead of breaking, so the game moves to the next round
+
+        await broadcast_event(
+            BroadcastMessageRequest(room_id=room_id, type="timer"),
+            Text(content=f"Round {round_number} - Timer: {timer} seconds")
+        )
+
+        # Wait for 1 second, but stop immediately if the event is set
+        try:
+            await asyncio.wait_for(round_cancellations[room_id].wait(), timeout=1)
+            logger.info(f"Round {round_number} in room {room_id} was cancelled.")
+            await broadcast_event(
+                BroadcastMessageRequest(room_id=room.id, type=MESSAGE_TYPE_ROUND_ENDED_PREMATURELY),
+                Text(content="Round ended prematurely")
+            )
+            return  # << Return instead of breaking
+        except asyncio.TimeoutError:
+            pass  # Timeout just means we continue the loop
+        except Exception as e:
+            logger.error(f"Error in start_round for room {room_id}: {str(e)}")
+
+    # Cleanup: reset event so next round isn't immediately canceled
+    round_cancellations[room_id].clear()
 
 async def start_game(room_id: str):
     logger.info(f"Starting game for room {room_id}")
     
-    if room_id in active_rooms:
-        await broadcast_event(BroadcastMessageRequest(room_id=room_id, type=MESSAGE_TYPE_GAME_START), Text(content="Game started!"))
-    else:
-        error_message = f"No active websocket for room {room_id} found"
+    if not room_id in active_rooms:
+        # The room can only start if there is an active websocket
+        error_message = f"Can not start game: no active websocket for room {room_id} found"
         logger.error(error_message)
         raise HTTPException(status_code=404, detail=error_message)
 
+    # Game start
+    await broadcast_event(BroadcastMessageRequest(room_id=room_id, type=MESSAGE_TYPE_GAME_START), Text(content="Game started!"))
+
+    # Retrieve the room for further processing
+    room: Room = await get_room(room_id)
+    logger.debug(f"Game loop started for room {room_id}: {room}")
+    logger.debug(f"All game tasks: {all_game_tasks}")
+
+    # Game Loop over the different rounds
+    logger.info(f"{len(room.game.rounds)}")
+    for round in room.game.rounds:
+        await start_round(room_id, round, room.game.current_round)
+        room.game.current_round += 1
+    logger.info(f"Game loop ended for room {room_id} at round {room.game.current_round}")
+
+        
+async def handle_guess(room_id: str, message: Message):
+    logger.info(f"Received guess from {message.sender_id} in room {room_id} with content {message.content}")
+
+    if message.content == "S3CR3T":
+        logger.info(f"Secret word found in room {room_id}")
+        round_cancellations[room_id].set()
+        return True
+    return(True)

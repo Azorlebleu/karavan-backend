@@ -34,7 +34,7 @@ async def get_chat(room_id: str):
 
 async def add_message(request: NewMessageRequest):
 
-    logger.info(f"Adding message to room {request.room_id} with content: {request.message.content} from {request.message.sender}")
+    logger.info(f"Adding message to room {request.room_id} with content: {request.message.content} from {request.message.sender_id}")
 
     chat = await get_chat(request.room_id)
 
