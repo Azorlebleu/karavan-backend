@@ -54,7 +54,8 @@ async def room_websocket(websocket: WebSocket, room_id: str, player: str):
 
 async def broadcast_event(request: BroadcastMessageRequest, model: Union[T, str]) -> bool:
 
-    logger.debug(f"Broadcasting {model} in room {request.room_id}")
+    # logger.debug(f"Broadcasting {model} in room {request.room_id}")
+    
     try:
 
         if request.room_id not in active_rooms:

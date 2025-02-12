@@ -12,4 +12,4 @@ class BroadcastMessageRequest(BaseModel):
     type: str
 
 class Text(BaseModel):
-    content: str
+    content: str|int

@@ -1,20 +1,20 @@
 from fastapi import WebSocket, WebSocketDisconnect, HTTPException, BackgroundTasks
 from ..repository.room import create_room, get_room
 from ..repository.chat import get_chat, add_message
-from ..repository.game import setup_new_game
+from ..repository.game import *
 
 from .websocket import active_rooms,  broadcast_event
 from ..schemas.room import Room
 from ..schemas.chat import Message, NewMessageRequest
 from ..schemas.common import BroadcastMessageRequest, SuccessMessage, Text
-from ..schemas.game import GameTasks, Round
+from ..schemas.game import GameTasks, Turn
 
 from ..logger import logger
 from ..settings import MESSAGE_TYPE_GAME_START, MESSAGE_TYPE_ROUND_ENDED_PREMATURELY
 import asyncio
 
 all_game_tasks = {}
-round_cancellations = {}
+turn_cancellations = {}
 
 async def handle_start_game(room_id: str):
     logger.info(f"Received request to start game for room {room_id}")
@@ -44,36 +44,36 @@ async def handle_start_game(room_id: str):
 
     return SuccessMessage(success=f"Game started in room {room_id}")
 
-async def start_round(room_id: str, round: Round, round_number: int):
+async def start_turn(room_id: str, round_number: int, turn_number: int):
     logger.info(f"Starting round {round_number} in room {room_id}")
 
     # Register cancellation event for this round
-    if room_id not in round_cancellations:
-        round_cancellations[room_id] = asyncio.Event()
+    if room_id not in turn_cancellations:
+        turn_cancellations[room_id] = asyncio.Event()
     else:
-        round_cancellations[room_id].clear()  # Reset if it was previously set
+        turn_cancellations[room_id].clear()  # Reset if it was previously set
 
     # Retrieve the room for further processing
     room: Room = await get_room(room_id)
 
     # Countdown timer from 10 to 0
-    for timer in range(10, -1, -1):
-        if round_cancellations[room_id].is_set():
+    for timer in range(5, -1, -1):
+        if turn_cancellations[room_id].is_set():
             logger.info(f"Round {round_number} in room {room_id} ended prematurely.")
             await broadcast_event(
                 BroadcastMessageRequest(room_id=room.room_id, type=MESSAGE_TYPE_ROUND_ENDED_PREMATURELY),
                 Text(content="Round ended prematurely")
             )
-            return  # << Return instead of breaking, so the game moves to the next round
+            return 
 
         await broadcast_event(
             BroadcastMessageRequest(room_id=room_id, type="timer"),
-            Text(content=f"Round {round_number} - Timer: {timer} seconds")
+            Text(content=f"Round {round_number} | Turn {turn_number} | Timer {timer}")
         )
 
         # Wait for 1 second, but stop immediately if the event is set
         try:
-            await asyncio.wait_for(round_cancellations[room_id].wait(), timeout=1)
+            await asyncio.wait_for(turn_cancellations[room_id].wait(), timeout=1)
             logger.info(f"Round {round_number} in room {room_id} was cancelled.")
             await broadcast_event(
                 BroadcastMessageRequest(room_id=room.id, type=MESSAGE_TYPE_ROUND_ENDED_PREMATURELY),
@@ -86,7 +86,7 @@ async def start_round(room_id: str, round: Round, round_number: int):
             logger.error(f"Error in start_round for room {room_id}: {str(e)}")
 
     # Cleanup: reset event so next round isn't immediately canceled
-    round_cancellations[room_id].clear()
+    turn_cancellations[room_id].clear()
 
 async def start_game(room_id: str):
     logger.info(f"Starting game for room {room_id}")
@@ -106,10 +106,18 @@ async def start_game(room_id: str):
     logger.debug(f"All game tasks: {all_game_tasks}")
 
     # Game Loop over the different rounds
-    logger.info(f"{len(room.game.rounds)}")
     for round in room.game.rounds:
-        await start_round(room_id, round, room.game.current_round)
-        room.game.current_round += 1
+        
+        for turn in round:
+            # The turn starts
+            await start_turn(room_id, room.game.current_round, room.game.current_turn)
+
+            # Update turn
+            await update_turn(room)
+
+        # Update round
+        await update_round(round)
+        
     logger.info(f"Game loop ended for room {room_id} at round {room.game.current_round}")
 
         
@@ -118,6 +126,6 @@ async def handle_guess(room_id: str, message: Message):
 
     if message.content == "S3CR3T":
         logger.info(f"Secret word found in room {room_id}")
-        round_cancellations[room_id].set()
+        turn_cancellations[room_id].set()
         return True
     return(True)

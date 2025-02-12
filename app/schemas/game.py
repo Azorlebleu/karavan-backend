@@ -7,11 +7,13 @@ class Song(BaseModel):
     title: str
     artist: str
 
-class Round(BaseModel):
+class Turn(BaseModel):
     player_id: str
     song: Optional[Song] = None
     guessers: Optional[List[str]] = []
 
+class Round(BaseModel):
+    turns: List[Turn] = []
 
 class GameStatus(BaseModel):
     type: str
@@ -19,13 +21,14 @@ class GameStatus(BaseModel):
 
 class GameConfig(BaseModel):
     num_rounds: int
-    round_duration: int # in seconds
+    turn_duration: int # in seconds
 
 class Game(BaseModel):
     status: GameStatus
     config: GameConfig
     current_round: int
-    rounds: List[Round]
+    current_turn: int
+    rounds: List[List[Turn]]
 
 class StartGameRequest(BaseModel):
     room_id: str
@@ -33,3 +36,12 @@ class StartGameRequest(BaseModel):
 class GameTasks(BaseModel):
     main: Any
     round: Any
+
+class TimerMessage(BaseModel):
+    round: int
+    turn: int
+    remaining_time: int
+
+class RoundAndTurnMessage(BaseModel):
+    round: int
+    turn: int

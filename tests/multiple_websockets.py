@@ -4,7 +4,7 @@ import random as rd
 
 WEBSOCKET_URL = "ws://karavan-back.pedro.elelievre.fr:8000/ws"  
 WEBSOCKET_URL = "ws://localhost:8000/ws"  
-room_id = "4c9f7ac2-3ad7-413f-9bff-df8742185b40"
+room_id = "d28e80e0-2464-4014-936c-02abcd3b64ee"
 players = ["Pedro", "Nhien", "Barbara", "Robi", "Jérôme"]
 
 # Function to handle a single WebSocket connection with reconnection logic

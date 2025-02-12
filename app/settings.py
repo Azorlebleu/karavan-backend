@@ -8,6 +8,8 @@ MESSAGE_TYPE_PLAYER_READY = "player_ready"
 MESSAGE_TYPE_ROOM_STATE = "room_state"
 MESSAGE_TYPE_GAME_START = "game_start"
 MESSAGE_TYPE_ROUND_ENDED_PREMATURELY = "round_ended_prematurely"
+MESSAGE_TYPE_ROUND_CHANGE = "round_change"
+MESSAGE_TYPE_TURN_CHANGE = "turn_change"
 
 GAME_STATUS_INITIALIZED = "initialized"
 GAME_STATUS_WAITING_PLAYERS = "waiting_players"

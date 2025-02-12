@@ -25,8 +25,8 @@ async def create_room():
     
     room_id = str(uuid.uuid4())  # Generate a unique room ID
 
-    game_config: GameConfig = GameConfig(num_rounds=GAME_CONFIG_NUMBER_OF_ROUNDS, round_duration=GAME_CONFIG_ROUND_DURATION) 
-    game: Game = Game(status=GameStatus(type=GAME_STATUS_INITIALIZED), current_round=0, rounds=[], config=game_config)
+    game_config: GameConfig = GameConfig(num_rounds=GAME_CONFIG_NUMBER_OF_ROUNDS, turn_duration=GAME_CONFIG_ROUND_DURATION) 
+    game: Game = Game(status=GameStatus(type=GAME_STATUS_INITIALIZED), current_round=0, current_turn=0, rounds=[], config=game_config)
     
     room = Room(room_id=room_id, players=[], game=game, room_state="waiting").model_dump_json()
     chat = Chat(room_id=room_id, messages=[]).model_dump_json()

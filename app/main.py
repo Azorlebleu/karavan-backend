@@ -24,7 +24,7 @@ app = FastAPI()
 # Handle CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["https://localhost:5173", "http://localhost:5173"], 
+    allow_origins=["https://localhost:5173", "http://localhost:5173", "http://karavan-back.pedro.elelievre.fr", "https://karavan-back.pedro.elelievre.fr"],  # Replace with your domain 
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
