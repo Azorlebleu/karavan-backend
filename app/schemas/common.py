@@ -1,4 +1,5 @@
 from pydantic import BaseModel
+from typing import Union
 
 class SuccessMessage(BaseModel):
     success: str
@@ -12,4 +13,4 @@ class BroadcastMessageRequest(BaseModel):
     type: str
 
 class Text(BaseModel):
-    content: str|int
+    content: Union[str,int]
