@@ -1,7 +1,7 @@
 from fastapi import WebSocket, WebSocketDisconnect, HTTPException
 from ..repository.room import create_room, get_room
 from ..repository.chat import get_chat, add_message
-from .websocket import active_rooms,  broadcast_event
+from .websocket import active_rooms_websockets,  broadcast_event
 from ..schemas.room import Room
 from ..schemas.chat import Message, NewMessageRequest
 from ..schemas.common import BroadcastMessageRequest

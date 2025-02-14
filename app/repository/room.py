@@ -45,7 +45,6 @@ async def get_room(room_id: str):
         error_message = f"Room {room_id} does not exist"
         logger.info(error_message)
         raise HTTPException(status_code=404, detail=error_message)
-    logger.debug(f"Room {room_id} retrieved successfully: {room}")
 
     return(Room.model_validate_json(room))
 

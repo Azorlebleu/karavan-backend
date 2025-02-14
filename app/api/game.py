@@ -11,8 +11,6 @@ router = APIRouter()
 
 @router.post("/game", response_model=SuccessMessage)
 async def start_game_endpoint(request: StartGameRequest):
-
-    logger.debug(f"Starting the game in room {request.room_id}")
     
     response: SuccessMessage = await handle_start_game(request.room_id)
 

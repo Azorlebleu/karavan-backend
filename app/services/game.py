@@ -3,14 +3,14 @@ from ..repository.room import create_room, get_room
 from ..repository.chat import get_chat, add_message
 from ..repository.game import *
 
-from .websocket import active_rooms,  broadcast_event
+from .websocket import active_rooms_websockets,  broadcast_event
 from ..schemas.room import Room
 from ..schemas.chat import Message, NewMessageRequest
 from ..schemas.common import BroadcastMessageRequest, SuccessMessage, Text
 from ..schemas.game import GameTasks, Turn
 
 from ..logger import logger
-from ..settings import MESSAGE_TYPE_GAME_START, MESSAGE_TYPE_ROUND_ENDED_PREMATURELY
+from ..settings import MESSAGE_TYPE_GAME_START, MESSAGE_TYPE_PHASE_ENDED_PREMATURELY
 import asyncio
 
 all_game_tasks = {}
@@ -44,54 +44,125 @@ async def handle_start_game(room_id: str):
 
     return SuccessMessage(success=f"Game started in room {room_id}")
 
-async def start_turn(room_id: str, round_number: int, turn_number: int):
-    logger.info(f"Starting round {round_number} in room {room_id}")
+async def handle_cancellation_event_registration(room_id):
+    # Register or reset the cancellation event for this room
 
-    # Register cancellation event for this round
     if room_id not in turn_cancellations:
         turn_cancellations[room_id] = asyncio.Event()
     else:
-        turn_cancellations[room_id].clear()  # Reset if it was previously set
+        turn_cancellations[room_id].clear()
+
+async def start_phase_pick_song(room_id: str, round_number: int, turn_number: int):
+    logger.info(f"Picking song for round {round_number} - turn {turn_number} in room {room_id}")
+
+    # Register or reset the cancellation event for this round
+    await handle_cancellation_event_registration(room_id)
 
     # Retrieve the room for further processing
     room: Room = await get_room(room_id)
 
-    # Countdown timer from 10 to 0
-    for timer in range(5, -1, -1):
-        if turn_cancellations[room_id].is_set():
-            logger.info(f"Round {round_number} in room {room_id} ended prematurely.")
+    # Retrieve possible songs
+    songs: List[Song] = await retrieve_songs()
+    logger.debug(f"Got songs for round {round_number}: {songs}")
+    
+    # Send the possible songs to the player currently playing
+    turn: Turn = room.game.rounds[round_number][turn_number]
+    await broadcast_event(
+        BroadcastMessageRequest(room_id=room_id, type="pick_song"),
+        songs,
+        player_id=turn.player_id,
+        debug=True
+    )
+
+    # Countdown timer
+    for timer in range(GAME_CONFIG_PICK_SONG_DURATION, -1, -1):
+
+        # Broadcast the timer event
+        try:
             await broadcast_event(
-                BroadcastMessageRequest(room_id=room.room_id, type=MESSAGE_TYPE_ROUND_ENDED_PREMATURELY),
-                Text(content="Round ended prematurely")
+                BroadcastMessageRequest(room_id=room_id, type="timer"),
+                TimerMessage(round=round_number, turn=turn_number, remaining_time=timer, current_phase="picking_song"),
+                debug=False
             )
-            return 
+        except Exception as e:
+            logger.error(f"Error broadcasting timer for room {room_id}: {str(e)}")
 
-        await broadcast_event(
-            BroadcastMessageRequest(room_id=room_id, type="timer"),
-            Text(content=f"Round {round_number} | Turn {turn_number} | Timer {timer}")
-        )
-
-        # Wait for 1 second, but stop immediately if the event is set
+        # Wait for 1 second, but exit early if cancellation is triggered
         try:
             await asyncio.wait_for(turn_cancellations[room_id].wait(), timeout=1)
-            logger.info(f"Round {round_number} in room {room_id} was cancelled.")
+
+            # Turn was canceled, broadcast the premature turn end message
+            logger.info(f"Turn {turn_number} in room {room_id} ended prematurely.")
             await broadcast_event(
-                BroadcastMessageRequest(room_id=room.id, type=MESSAGE_TYPE_ROUND_ENDED_PREMATURELY),
-                Text(content="Round ended prematurely")
+                BroadcastMessageRequest(room_id=room.room_id, type=MESSAGE_TYPE_PHASE_ENDED_PREMATURELY),
+                Text(content="Picking song phase ended prematurely"),
+                debug=True
             )
-            return  # << Return instead of breaking
+            return  
         except asyncio.TimeoutError:
-            pass  # Timeout just means we continue the loop
+            pass  # Continue the countdown if no cancellation
         except Exception as e:
-            logger.error(f"Error in start_round for room {room_id}: {str(e)}")
+            logger.error(f"Error in start_turn for room {room_id}: {str(e)}")
+
+    # If we reach here, it means the player hasn't chosen any song
+    logger.info(f"No song chosen for turn {turn_number} in room {room_id}")
+    await broadcast_event(
+        BroadcastMessageRequest(room_id=room.room_id, type=MESSAGE_TYPE_NO_SONG_CHOSEN),
+        Text(content="No song chosen"),
+        debug=True
+    )
+    return
 
     # Cleanup: reset event so next round isn't immediately canceled
     turn_cancellations[room_id].clear()
 
+async def start_phase_guess_song(room_id: str, round_number: int, turn_number: int):
+    logger.info(f"Starting round {round_number} in room {room_id}")
+
+    # Register or reset the cancellation event for this round
+    await handle_cancellation_event_registration(room_id)
+
+    # Retrieve the room for further processing
+    room: Room = await get_room(room_id)
+
+    # Countdown timer
+    for timer in range(room.game.config.turn_duration, -1, -1):
+
+        # Broadcast the timer event
+        try:
+            await broadcast_event(
+                BroadcastMessageRequest(room_id=room_id, type="timer"),
+                TimerMessage(round=round_number, turn=turn_number, remaining_time=timer, current_phase="guessing_song"),
+                debug=False
+            )
+        except Exception as e:
+            logger.error(f"Error broadcasting timer for room {room_id}: {str(e)}")
+
+        # Wait for 1 second, but exit early if cancellation is triggered
+        try:
+            await asyncio.wait_for(turn_cancellations[room_id].wait(), timeout=1)
+
+            # Turn was canceled, broadcast the premature turn end message
+            logger.info(f"Turn {turn_number} in room {room_id} ended prematurely.")
+            await broadcast_event(
+                BroadcastMessageRequest(room_id=room.room_id, type=MESSAGE_TYPE_PHASE_ENDED_PREMATURELY),
+                Text(content="Guessing song phase ended prematurely"),
+                debug=True
+            )
+            return  
+        except asyncio.TimeoutError:
+            pass  # Continue the countdown if no cancellation
+        except Exception as e:
+            logger.error(f"Error in start_turn for room {room_id}: {str(e)}")
+
+    # Cleanup: reset event so next round isn't immediately canceled
+    turn_cancellations[room_id].clear()
+
+
 async def start_game(room_id: str):
     logger.info(f"Starting game for room {room_id}")
     
-    if not room_id in active_rooms:
+    if not room_id in active_rooms_websockets:
         # The room can only start if there is an active websocket
         error_message = f"Can not start game: no active websocket for room {room_id} found"
         logger.error(error_message)
@@ -102,23 +173,29 @@ async def start_game(room_id: str):
 
     # Retrieve the room for further processing
     room: Room = await get_room(room_id)
-    logger.debug(f"Game loop started for room {room_id}: {room}")
-    logger.debug(f"All game tasks: {all_game_tasks}")
 
-    # Game Loop over the different rounds
-    for round in room.game.rounds:
-        
-        for turn in round:
-            # The turn starts
-            await start_turn(room_id, room.game.current_round, room.game.current_turn)
+    try:
+        # Game Loop over the different rounds
+        for round in room.game.rounds:
 
-            # Update turn
-            await update_turn(room)
+            for turn in round:
 
-        # Update round
-        await update_round(round)
-        
-    logger.info(f"Game loop ended for room {room_id} at round {room.game.current_round}")
+                # Pick a song
+                await start_phase_pick_song(room_id, room.game.current_round, room.game.current_turn)
+
+                # Guess the song
+                await start_phase_guess_song(room_id, room.game.current_round, room.game.current_turn)
+
+                # Update turn
+                await update_turn(room)
+
+            # Update round
+            await update_round(room)
+            
+        logger.info(f"Game loop ended for room {room_id} at round {room.game.current_round}")
+
+    except Exception as e:
+        logger.error(f"Error in game loop for room {room_id}: {str(e)}")
 
         
 async def handle_guess(room_id: str, message: Message):

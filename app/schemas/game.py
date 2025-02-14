@@ -1,9 +1,9 @@
 from pydantic import BaseModel
-from typing import List, Optional, Union, Any
+from typing import List, Optional, Union, Any, Literal
 import asyncio
 
 class Song(BaseModel):
-    id: str
+    id: int
     title: str
     artist: str
 
@@ -41,7 +41,9 @@ class TimerMessage(BaseModel):
     round: int
     turn: int
     remaining_time: int
+    current_phase: Literal["picking_song", "guessing_song", "scoreboard"]
 
 class RoundAndTurnMessage(BaseModel):
     round: int
     turn: int
+

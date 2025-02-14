@@ -1,0 +1,71 @@
+{
+    "room_id": "df4d25a7-873d-4f86-8dc9-adf927eb664a",
+    "owner": "9637d690-eff6-4f06-bae1-aca013ab2894",
+    "players": [
+      {
+        "name": "barb",
+        "id": "9637d690-eff6-4f06-bae1-aca013ab2894",
+        "ready": true,
+        "connected": true,
+        "score": 0
+      },
+      {
+        "name": "pedro",
+        "id": "1e23fcf8-8f56-4453-b078-40a656cd9b1b",
+        "ready": true,
+        "connected": true,
+        "score": 0
+      }
+    ],
+    "game": {
+      "status": {
+        "type": "playing_round",
+        "detail": null
+      },
+      "config": {
+        "num_rounds": 3,
+        "turn_duration": 90
+      },
+      "current_round": 0,
+      "current_turn": 1,
+      "rounds": [
+        [
+          {
+            "player_id": "1e23fcf8-8f56-4453-b078-40a656cd9b1b",
+            "song": null,
+            "guessers": []
+          },
+          {
+            "player_id": "9637d690-eff6-4f06-bae1-aca013ab2894",
+            "song": null,
+            "guessers": []
+          }
+        ],
+        [
+          {
+            "player_id": "1e23fcf8-8f56-4453-b078-40a656cd9b1b",
+            "song": null,
+            "guessers": []
+          },
+          {
+            "player_id": "9637d690-eff6-4f06-bae1-aca013ab2894",
+            "song": null,
+            "guessers": []
+          }
+        ],
+        [
+          {
+            "player_id": "1e23fcf8-8f56-4453-b078-40a656cd9b1b",
+            "song": null,
+            "guessers": []
+          },
+          {
+            "player_id": "9637d690-eff6-4f06-bae1-aca013ab2894",
+            "song": null,
+            "guessers": []
+          }
+        ]
+      ]
+    },
+    "room_state": "playing"
+  }
