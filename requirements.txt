@@ -3,6 +3,7 @@ websockets
 fastapi
 uvicorn
 aioredis
+redis
 psycopg2
 asyncpg
 sqlalchemy
@@ -10,3 +11,4 @@ databases
 alembic
 python-dotenv
 gunicorn
+setuptools

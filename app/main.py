@@ -11,7 +11,7 @@ from app.api.room import router as room_router
 from app.api.chat import router as chat_router
 from app.api.game import router as game_router
 
-import aioredis
+import redis
 from fastapi.responses import JSONResponse
 from dotenv import load_dotenv
 import os 
@@ -32,7 +32,7 @@ app.add_middleware(
 
 @app.on_event("startup")
 async def startup():
-    await database.connect()
+    # await database.connect()
     await redis_room_init()
     await redis_chat_init()
 

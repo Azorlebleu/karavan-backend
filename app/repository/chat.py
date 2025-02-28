@@ -7,7 +7,8 @@ import uuid
 from fastapi import HTTPException, FastAPI
 from ..schemas.room import Room
 from ..schemas.chat import Chat, Message, NewMessageRequest
-import aioredis
+import redis.asyncio as aioredis
+
 
 load_dotenv()
 REDIS_URL = os.getenv("REDIS_URL")

@@ -12,7 +12,7 @@ from .room import get_room, update_room
 from random import shuffle
 from ..services.websocket import broadcast_event
 
-import aioredis
+import redis.asyncio as redis
 from typing import Dict, List
 
 from ..settings import *
@@ -23,7 +23,7 @@ redis = None
 
 async def init_redis():
     global redis
-    redis = aioredis.from_url(REDIS_URL, encoding="utf-8", decode_responses=True)
+    redis = redis.from_url(REDIS_URL, encoding="utf-8", decode_responses=True)
 
 
 

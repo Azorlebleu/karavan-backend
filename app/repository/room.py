@@ -8,7 +8,7 @@ from fastapi import HTTPException, FastAPI
 from ..schemas.room import Room, Player, PlayerSafe, get_player_safe
 from ..schemas.chat import Chat
 from ..schemas.game import Game, GameStatus, GameConfig
-import aioredis
+import redis.asyncio as aioredis
 from typing import Dict, List
 from ..settings import *
 
