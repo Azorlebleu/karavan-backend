@@ -59,8 +59,9 @@ async def setup_new_game(room_id: str):
     room.game.current_round = 0
     room.game.current_turn = 0
     room.game.rounds = rounds
-    room.game.status = GameStatus(type=GAME_STATUS_PLAYING_ROUND, detail=None)
-    room.room_state = "playing"
+    # room.game.status = GameStatus(type=GAME_STATUS_PLAYING_ROUND, detail=None)
+    room.game.status = GameStatus(type=GAME_PHASE_PICKING_SONG, detail=None)
+    room.room_state = ROOM_STATUS_PLAYING
     
     await update_room(room)
     
@@ -105,7 +106,7 @@ async def update_round(room: Room):
 async def retrieve_songs():
     """Retrieve 3 songs."""
 
-    song_1 = Song(id=1, title="Ma meilleure ennemie", artist="Stromae & Pomme")
+    song_1 = Song(id=1, title="Ma meilleure ennemie", artist="Stromae")
     song_2 = Song(id=2, title="La Quête", artist="Orelsan")
     song_3 = Song(id=3, title="Ophelia", artist="The Lumineers")
     
