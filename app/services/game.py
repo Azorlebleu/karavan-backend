@@ -85,12 +85,6 @@ async def start_phase_pick_song(room_id: str, round_number: int, turn_number: in
 
     # Update room with new data
     await update_room(room)
-
-    # Notice the start of the phase
-    await broadcast_event(
-        BroadcastMessageRequest(room_id=room_id, type=MESSAGE_TYPE_GAME_PHASE_CHANGE),
-        ChangeGamePhaseMessage(phase=GAME_PHASE_PICKING_SONG)
-    )
     
     # Send the possible songs to the player currently playing
     turn: Turn = room.game.rounds[round_number][turn_number]
@@ -165,12 +159,6 @@ async def start_phase_guess_song(room_id: str, round_number: int, turn_number: i
     # Update room with new game phase
     room.game.status = GameStatus(type=GAME_PHASE_GUESSING_SONG, detail=None)
     await update_room(room)
-
-    # Notice the start of the phase
-    await broadcast_event(
-        BroadcastMessageRequest(room_id=room_id, type=MESSAGE_TYPE_GAME_PHASE_CHANGE),
-        ChangeGamePhaseMessage(phase=GAME_PHASE_GUESSING_SONG)
-    )
 
     # Countdown timer
     for timer in range(room.game.config.turn_duration, -1, -1):
