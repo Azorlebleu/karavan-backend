@@ -3,8 +3,8 @@ import websockets
 import random as rd
 import json
 
-WEBSOCKET_URL = "ws://karavan-back.pedro.elelievre.fr:8000/ws"  
 WEBSOCKET_URL = "ws://localhost:8000/ws"  
+WEBSOCKET_URL = "wss://karavan-back.pedro.elelievre.fr/ws"  
 
 with open("./room.json") as file:
     room = json.load(file)

@@ -1,7 +1,7 @@
 # karavan-backend
 
 ## Run the app
-```
+```bash
 cd /KaraVan/karavan-backend
 source /venv/bin/activate
 
@@ -9,7 +9,10 @@ source /venv/bin/activate
 uvicorn app.main:app --reload
 
 # Production mode (with SSL)
-uvicorn app.main:app --host 0.0.0.0 --port 8000
+uvicorn app.main:app --host 0.0.0.0 --port 8001
+
+# Production mode (with TLS) (doesn't work)
+sudo venv/bin/uvicorn app.main:app --host 0.0.0.0 --port 8001 --ssl-keyfile=/etc/letsencrypt/live/karavan.pedro.elelievre.fr/privkey.pem --ssl-certfile=/etc/letsencrypt/live/karavan.pedro.elelievre.fr/fullchain.pem
 
 ```
 

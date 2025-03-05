@@ -8,7 +8,7 @@ import time
 
 # URL of the server
 SERVER_URL = "http://127.0.0.1:8000"
-WEBSOCKET_URL = "ws://127.0.0.1:8000/ws"
+WEBSOCKET_URL = "wss://karavan-back.pedro.elelievre.fr/ws"
 
 
 
@@ -102,9 +102,9 @@ async def main():
     # await asyncio.gather(test_http(), test_websocket(), test_room_player())
 
     # Run tests sequentially
-    await test_http()
+    # await test_http()
     await test_websocket()
-    await test_room_player()
+    # await test_room_player()
     
 if __name__ == "__main__":
     asyncio.run(main())
