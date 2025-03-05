@@ -6,10 +6,12 @@ class Song(BaseModel):
     id: int
     title: str
     artist: str
+    lyrics: Optional[str] = None
 
 class Turn(BaseModel):
     player_id: str
-    song: Optional[Song] = None
+    song: Optional[Song] = None #TODO: hide or store somewhere else
+    song_choices: Optional[List[Song]] = [] #TODO: hide or store somewhere else
     guessers: Optional[List[str]] = []
 
 class Round(BaseModel):
@@ -33,6 +35,13 @@ class Game(BaseModel):
 class StartGameRequest(BaseModel):
     room_id: str
 
+class PickSongRequest(BaseModel):
+    room_id: str
+    song_id: int
+
+class ChangeGamePhaseMessage(BaseModel):
+    phase: Literal["picking_song", "guessing_song", "scoreboard"]
+
 class GameTasks(BaseModel):
     main: Any
     round: Any
@@ -46,4 +55,3 @@ class TimerMessage(BaseModel):
 class RoundAndTurnMessage(BaseModel):
     round: int
     turn: int
-

@@ -6,7 +6,7 @@ from ..schemas.game import GameStatus
 from .websocket import broadcast_event
 from typing import Dict, List
 from ..logger import logger
-from ..settings import MAX_PLAYERS, MSG_ALL_PLAYERS_READY, MESSAGE_TYPE_ALL_PLAYERS_READY, MESSAGE_TYPE_PLAYER_READY, MESSAGE_TYPE_ROOM_STATE, GAME_STATUS_WAITING_OWNER, GAME_STATUS_WAITING_PLAYERS, MESSAGE_TYPE_WAITING_FOR_PLAYERS
+from ..settings import MAX_PLAYERS, MSG_ALL_PLAYERS_READY, MESSAGE_TYPE_ALL_PLAYERS_READY, MESSAGE_TYPE_PLAYER_READY, MESSAGE_TYPE_ROOM_STATE, GAME_STATUS_WAITING_OWNER, GAME_STATUS_WAITING_PLAYERS, MESSAGE_TYPE_WAITING_FOR_PLAYERS, ROOM_STATUS_WAITING
 import json
 
 async def get_new_room(player_name: str):
@@ -47,10 +47,11 @@ async def join_room(request: JoinRoomRequest):
             await set_owner(player.id, request.room_id)
 
         # Set the game status to WAITING_PLAYERS
-        # room.game.status = GameStatus(type=GAME_STATUS_WAITING_PLAYERS)
+        # Only if the room is in WAITING mode
         room = await get_room(room.room_id)
-        room = await handle_players_not_ready(room)
-        await update_room(room)
+        if room.room_state == ROOM_STATUS_WAITING:
+            room = await handle_players_not_ready(room)
+            await update_room(room)
         
         # Send updated room state to all connected clients
         room_safe = await get_room_safe(request.room_id)
@@ -98,18 +99,19 @@ async def handle_player_ready(request: PlayerReadyRequest):
         # Broadast that a player is ready
         await broadcast_event(BroadcastMessageRequest(room_id=request.room_id, type=MESSAGE_TYPE_PLAYER_READY), PlayerReady(player_name=request.player_name, ready=request.ready))
 
-
         # If all players are ready, broadcast a "all players ready" event and change the game's state
-        players = (await get_room(request.room_id)).players
-        if all(player.ready for player in players):
-            await broadcast_event(BroadcastMessageRequest(room_id=request.room_id, type=MESSAGE_TYPE_ALL_PLAYERS_READY), "")
-            room.game.status = GameStatus(type=GAME_STATUS_WAITING_OWNER)
-            logger.info(f"All players in room {request.room_id} are ready")
-        
-        # If at least one player is not ready, change the game's state to waiting for players
-        else:
-            room: Room = await handle_players_not_ready(room)
-        await update_room(room)
+        # Only if room is in WAITING mode
+        if room.room_state == ROOM_STATUS_WAITING:
+            players = (await get_room(request.room_id)).players
+            if all(player.ready for player in players):
+                await broadcast_event(BroadcastMessageRequest(room_id=request.room_id, type=MESSAGE_TYPE_ALL_PLAYERS_READY), "")
+                room.game.status = GameStatus(type=GAME_STATUS_WAITING_OWNER)
+                logger.info(f"All players in room {request.room_id} are ready")
+            
+            # If at least one player is not ready, change the game's state to waiting for players
+            else:
+                room: Room = await handle_players_not_ready(room)
+            await update_room(room)
 
     except Exception as e:
         error_message = f"Error handling player ready status in room {request.room_id}: {str(e)}"

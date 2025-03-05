@@ -8,7 +8,7 @@ from ..schemas.common import BroadcastMessageRequest
 
 from ..services.game import handle_guess
 from ..logger import logger
-from ..settings import MAX_PLAYERS, MESSAGE_TYPE_NEW_MESSAGE, GAME_STATUS_PLAYING_ROUND
+from ..settings import MAX_PLAYERS, MESSAGE_TYPE_NEW_MESSAGE, ROOM_STATUS_PLAYING
 from datetime import datetime
 
 
@@ -53,9 +53,9 @@ async def handle_send_message(request: NewMessageRequest):
     if message_stored_redis:
         logger.debug(f"Message from {request.message.sender_id} in room {request.room_id} has been stored in Redis")
 
-    logger.debug(f"Room's status: {room.game.status}")
+    logger.debug(f"Room's status: {room.room_state}")
     # If the room is currently playing, handle the message via game logic
-    if room.game.status.type == GAME_STATUS_PLAYING_ROUND:
+    if room.room_state == ROOM_STATUS_PLAYING:
         logger.debug(f"Handling guess for room {request.room_id}")
         guess_handled = await handle_guess(request.room_id, request.message)
         if guess_handled:

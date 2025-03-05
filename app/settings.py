@@ -7,17 +7,22 @@ MESSAGE_TYPE_NEW_MESSAGE = "new_message"
 MESSAGE_TYPE_PLAYER_READY = "player_ready"
 MESSAGE_TYPE_ROOM_STATE = "room_state"
 MESSAGE_TYPE_GAME_START = "game_start"
+MESSAGE_TYPE_GAME_PHASE_CHANGE = "new_game_phase"
 MESSAGE_TYPE_PHASE_ENDED_PREMATURELY = "turn_ended_prematurely"
 MESSAGE_TYPE_NO_SONG_CHOSEN = "no_song_chosen"
 MESSAGE_TYPE_ROUND_CHANGE = "round_change"
 MESSAGE_TYPE_TURN_CHANGE = "turn_change"
+MESSAGE_TYPE_SINGER_SONG_DATA = "singer_song_data"
 
 GAME_STATUS_INITIALIZED = "initialized"
 GAME_STATUS_WAITING_PLAYERS = "waiting_players"
 GAME_STATUS_WAITING_OWNER = "waiting_owner"
-GAME_STATUS_PLAYING_ROUND = "playing_round"
-GAME_STATUS_CHOOSING_SONG = "choosing_song"
+GAME_STATUS_PLAYING_ROUND = "playing_round" #TODO: remove
+GAME_STATUS_CHOOSING_SONG = "choosing_song" #TODO: remove
 GAME_STATUS_FINISHED = "finished"
+
+GAME_PHASE_PICKING_SONG = "picking_song"
+GAME_PHASE_GUESSING_SONG = "guessing_song"
 
 ROOM_STATUS_WAITING = "waiting"
 ROOM_STATUS_PLAYING = "playing"
@@ -26,3 +31,5 @@ ROOM_STATUS_FINISHED = "finished"
 GAME_CONFIG_NUMBER_OF_ROUNDS = 3
 GAME_CONFIG_ROUND_DURATION = 90
 GAME_CONFIG_PICK_SONG_DURATION = 15
+
+LYRICS_API_URL = 'https://api.lyrics.ovh/v1'

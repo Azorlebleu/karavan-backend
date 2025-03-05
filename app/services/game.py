@@ -1,4 +1,6 @@
 from fastapi import WebSocket, WebSocketDisconnect, HTTPException, BackgroundTasks
+
+from app.services.song import retrieve_lyrics
 from ..repository.room import create_room, get_room
 from ..repository.chat import get_chat, add_message
 from ..repository.game import *
@@ -12,6 +14,8 @@ from ..schemas.game import GameTasks, Turn
 from ..logger import logger
 from ..settings import MESSAGE_TYPE_GAME_START, MESSAGE_TYPE_PHASE_ENDED_PREMATURELY
 import asyncio
+import copy
+import random
 
 all_game_tasks = {}
 turn_cancellations = {}
@@ -64,6 +68,21 @@ async def start_phase_pick_song(room_id: str, round_number: int, turn_number: in
     # Retrieve possible songs
     songs: List[Song] = await retrieve_songs()
     logger.debug(f"Got songs for round {round_number}: {songs}")
+
+    # Update song choices in room
+    room.game.rounds[round_number][turn_number].song_choices = songs[:]
+
+    # Update game phase in room
+    room.game.status = GameStatus(type=GAME_PHASE_PICKING_SONG, detail=None)
+
+    # Update room with new data
+    await update_room(room)
+
+    # Notice the start of the phase
+    await broadcast_event(
+        BroadcastMessageRequest(room_id=room_id, type=MESSAGE_TYPE_GAME_PHASE_CHANGE),
+        ChangeGamePhaseMessage(phase=GAME_PHASE_PICKING_SONG)
+    )
     
     # Send the possible songs to the player currently playing
     turn: Turn = room.game.rounds[round_number][turn_number]
@@ -81,7 +100,7 @@ async def start_phase_pick_song(room_id: str, round_number: int, turn_number: in
         try:
             await broadcast_event(
                 BroadcastMessageRequest(room_id=room_id, type="timer"),
-                TimerMessage(round=round_number, turn=turn_number, remaining_time=timer, current_phase="picking_song"),
+                TimerMessage(round=round_number, turn=turn_number, remaining_time=timer, current_phase=GAME_PHASE_PICKING_SONG),
                 debug=False
             )
         except Exception as e:
@@ -111,6 +130,10 @@ async def start_phase_pick_song(room_id: str, round_number: int, turn_number: in
         Text(content="No song chosen"),
         debug=True
     )
+
+    # Pick default song choice
+    await handle_pick_song(room_id)
+
     return
 
     # Cleanup: reset event so next round isn't immediately canceled
@@ -125,6 +148,16 @@ async def start_phase_guess_song(room_id: str, round_number: int, turn_number: i
     # Retrieve the room for further processing
     room: Room = await get_room(room_id)
 
+    # Update room with new game phase
+    room.game.status = GameStatus(type=GAME_PHASE_GUESSING_SONG, detail=None)
+    await update_room(room)
+
+    # Notice the start of the phase
+    await broadcast_event(
+        BroadcastMessageRequest(room_id=room_id, type=MESSAGE_TYPE_GAME_PHASE_CHANGE),
+        ChangeGamePhaseMessage(phase=GAME_PHASE_GUESSING_SONG)
+    )
+
     # Countdown timer
     for timer in range(room.game.config.turn_duration, -1, -1):
 
@@ -132,7 +165,7 @@ async def start_phase_guess_song(room_id: str, round_number: int, turn_number: i
         try:
             await broadcast_event(
                 BroadcastMessageRequest(room_id=room_id, type="timer"),
-                TimerMessage(round=round_number, turn=turn_number, remaining_time=timer, current_phase="guessing_song"),
+                TimerMessage(round=round_number, turn=turn_number, remaining_time=timer, current_phase=GAME_PHASE_GUESSING_SONG),
                 debug=False
             )
         except Exception as e:
@@ -197,7 +230,7 @@ async def start_game(room_id: str):
     except Exception as e:
         logger.error(f"Error in game loop for room {room_id}: {str(e)}")
 
-        
+#TODO: implement logic
 async def handle_guess(room_id: str, message: Message):
     logger.info(f"Received guess from {message.sender_id} in room {room_id} with content {message.content}")
 
@@ -205,4 +238,66 @@ async def handle_guess(room_id: str, message: Message):
         logger.info(f"Secret word found in room {room_id}")
         turn_cancellations[room_id].set()
         return True
-    return(True)
+    return(False)
+
+#TODO: implement logic
+async def handle_pick_song(room_id: str, song_id: int = None):
+    logger.info(f"Handling song picked with id {song_id} in room {room_id}")
+
+    # Retrieve the room for further processing
+    room: Room = await get_room(room_id)
+
+    # If room does not exist
+    if room is None:
+        error_message = f"Room {room_id} does not exist"
+        logger.error(error_message)
+        raise HTTPException(status_code=404, detail=error_message)
+    
+    current_round = room.game.current_round
+    current_turn = room.game.current_turn
+
+    # Retrieve song choices for the current turn
+    songs = room.game.rounds[current_round][current_turn].song_choices
+
+    if song_id:
+        # Find songs with matching id in the song choices
+        matching_songs: List[Song] = [song for song in songs if song.id == song_id]
+        
+        # Update the turn data with the song picked
+        if matching_songs:
+            song = copy.copy(matching_songs[0])
+        else: 
+            logger.info("No song matches this id")
+
+            # Pick a random song if no matching song is found
+            rand =  random.randint(0, len(songs)-1)
+            song = copy.copy(songs[rand])
+    else:
+        # Pick a random song if no id is provided
+        rand =  random.randint(0, len(songs)-1)
+        song = copy.copy(songs[rand])
+
+    room.game.rounds[current_round][current_turn].song = song
+    await update_room(room)
+
+    # Retrieve song lyrics
+    try:
+        lyrics = await retrieve_lyrics(song.title, song.artist)
+        song.lyrics = lyrics
+    except Exception as e:
+        error_message = f"Error retrieving lyrics of song {song.title} by {song.artist} for room {room_id}"
+        logger.error(error_message)
+        raise HTTPException(status_code=404, detail=error_message)
+
+    # Send song data only to the singer through websocket
+    await broadcast_event(
+        BroadcastMessageRequest(room_id=room_id, type=MESSAGE_TYPE_SINGER_SONG_DATA),
+        song,
+        player_id=room.game.rounds[current_round][current_turn].player_id,
+        debug=True
+    )
+
+    # Force picking_song phase to end
+    turn_cancellations[room_id].set()
+
+    return SuccessMessage(success=f"Song with id {song_id} picked by singer in {room_id}")
