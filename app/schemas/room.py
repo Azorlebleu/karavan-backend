@@ -2,6 +2,8 @@ from pydantic import BaseModel, Field
 from typing import Optional, List, Type, TypeVar, Set, Union, Literal
 from .chat import Chat
 from .game import Game
+from fastapi import HTTPException
+from ..logger import logger
 
 class PlayerSafe(BaseModel):
     name: str
@@ -30,12 +32,15 @@ class Room(BaseModel):
     game: Optional[Game] = None
     room_state: Literal["waiting", "playing", "finished"]
 
+    def are_all_players_ready(self):
+        if all(player.ready for player in self.players): return True
+        return False
+
 class RoomSafe(BaseModel):
     room_id: str
     owner: Optional[str] = None
     players_safe: List[PlayerSafe] = Field(default=[])
     state: str
-
 
 class RoomResponse(BaseModel):
     room: Room

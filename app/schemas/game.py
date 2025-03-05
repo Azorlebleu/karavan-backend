@@ -7,6 +7,9 @@ class Song(BaseModel):
     title: str
     artist: str
 
+class Phase(BaseModel):
+    phase: Literal["picking_song", "guessing_song"]
+
 class Turn(BaseModel):
     player_id: str
     song: Optional[Song] = None

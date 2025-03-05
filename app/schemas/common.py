@@ -1,6 +1,6 @@
 from fastapi import WebSocket
 from pydantic import BaseModel
-from typing import Union, Any
+from typing import Union, Any, Literal
 
 class SuccessMessage(BaseModel):
     success: str
@@ -11,7 +11,7 @@ class BroadcastMessage(BaseModel):
 
 class BroadcastMessageRequest(BaseModel):
     room_id: str
-    type: str
+    type: Literal["waiting_for_players","all_players_ready","new_message","player_ready","room_state","game_start","turn_ended_prematurely","no_song_chosen","round_change","turn_change","phase_change","pick_song","timer"]
 
 class Text(BaseModel):
     content: Union[str,int]

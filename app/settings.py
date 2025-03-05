@@ -11,6 +11,7 @@ MESSAGE_TYPE_PHASE_ENDED_PREMATURELY = "turn_ended_prematurely"
 MESSAGE_TYPE_NO_SONG_CHOSEN = "no_song_chosen"
 MESSAGE_TYPE_ROUND_CHANGE = "round_change"
 MESSAGE_TYPE_TURN_CHANGE = "turn_change"
+MESSAGE_TYPE_PHASE_CHANGE = "phase_change"
 
 GAME_STATUS_INITIALIZED = "initialized"
 GAME_STATUS_WAITING_PLAYERS = "waiting_players"

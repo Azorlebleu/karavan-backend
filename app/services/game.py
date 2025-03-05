@@ -22,16 +22,17 @@ async def handle_start_game(room_id: str):
     # Conditions
     room = await get_room(room_id)
 
+    logger.debug(f"Retrieved room: {room}, type: {type(room)}, is None: {room is None}")
     # If room does not exist
     if room is None:
-        error_message = f"Room {room_id} does not exist"
+        error_message = f"Error starting the game: room {room_id} does not exist"
         logger.error(error_message)
         raise HTTPException(status_code=404, detail=error_message)
     
     # If all players are ready
-    if not(all(player.ready for player in room.players)):
+    if not(room.are_all_players_ready()):
         error_message = f"Not all players are ready in room {room_id}"
-        logger.info(error_message)
+        logger.error(error_message)
         raise HTTPException(status_code=400, detail=error_message)
 
     # Initialize the room and the game state
@@ -54,6 +55,13 @@ async def handle_cancellation_event_registration(room_id):
 
 async def start_phase_pick_song(room_id: str, round_number: int, turn_number: int):
     logger.info(f"Picking song for round {round_number} - turn {turn_number} in room {room_id}")
+
+    # Broadcast phase change event
+    await broadcast_event(
+        BroadcastMessageRequest(room_id=room_id, type="phase_change"),
+        Phase(phase="picking_song"),
+        debug=True
+    )
 
     # Register or reset the cancellation event for this round
     await handle_cancellation_event_registration(room_id)
@@ -119,6 +127,12 @@ async def start_phase_pick_song(room_id: str, round_number: int, turn_number: in
 async def start_phase_guess_song(room_id: str, round_number: int, turn_number: int):
     logger.info(f"Starting round {round_number} in room {room_id}")
 
+    # Broadcast phase change event
+    await broadcast_event(
+        BroadcastMessageRequest(room_id=room_id, type="phase_change"),
+        Phase(phase="guessing_song"),
+        debug=True
+    )
     # Register or reset the cancellation event for this round
     await handle_cancellation_event_registration(room_id)
 
